@@ -9,7 +9,7 @@ import MissionTimeline from './components/MissionTimeline.jsx';
 import CrewPanel from './components/CrewPanel.jsx';
 import DetailCards from './components/DetailCards.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
-import SourceAttribution from './components/SourceAttribution.jsx';
+import AROWEmbed from './components/AROWEmbed.jsx';
 import UnitToggle from './components/UnitToggle.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
 
@@ -24,9 +24,7 @@ function Dashboard() {
         <div className="max-w-[1440px] mx-auto px-4">
           <div className="flex items-center justify-between py-2.5">
             <div className="flex items-center gap-3">
-              <div className="w-7 h-7 rounded-lg bg-space-600 flex items-center justify-center text-[11px] font-bold text-slate-300 tracking-tight">
-                A2
-              </div>
+              <img src="/artemis-ii-patch.svg" alt="Artemis II" className="w-7 h-7 rounded-lg" />
               <div>
                 <h1 className="text-sm font-semibold text-white tracking-wide">Artemis II</h1>
                 <p className="text-[9px] uppercase tracking-widest text-label">Mission Dashboard</p>
@@ -66,14 +64,14 @@ function Dashboard() {
               <MissionTimeline currentTime={telemetry?.epoch?.getTime()} />
             </div>
 
+            <AROWEmbed />
+
             <TrajectoryMap trajectoryPath={trajectoryPath} telemetry={telemetry} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <DetailCards telemetry={telemetry} />
               <CrewPanel />
             </div>
-
-            <SourceAttribution />
           </>
         )}
 
@@ -100,17 +98,9 @@ function Dashboard() {
           <>
             <TelemetryPanel telemetry={telemetry} />
             <DetailCards telemetry={telemetry} />
-            <SourceAttribution />
           </>
         )}
       </main>
-
-      {/* Footer */}
-      <footer className="max-w-[1440px] mx-auto px-4 py-6 border-t border-border">
-        <p className="text-[10px] text-label text-center">
-          Data: JPL Horizons &amp; NASA/JSC/FOD | State vectors in EME2000 reference frame
-        </p>
-      </footer>
     </div>
   );
 }

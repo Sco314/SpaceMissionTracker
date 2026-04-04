@@ -1,16 +1,35 @@
-# React + Vite
+# Artemis II Mission Dashboard
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+Real-time mission tracking dashboard for NASA's Artemis II crewed lunar flyby mission. Built with React, Vite, and Tailwind CSS.
 
-Currently, two official plugins are available:
+## Setup
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+```bash
+npm install
+npm run dev
+```
 
-## React Compiler
+Build for production:
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+```bash
+npm run build
+```
 
-## Expanding the ESLint configuration
+## Data Sources & Methodology
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+### Trajectory Data
+State vectors from NASA/JSC Flight Dynamics Operations via the CCSDS Orbital Ephemeris Message (OEM) standard. Reference frame: EME2000 (Earth Mean Equator and Equinox of J2000.0), Earth-centered.
+
+### Live Updates
+Position data sourced from JPL Horizons System (spacecraft ID: -1024). Vectors at 4-minute intervals, with 2-second resolution during maneuvers. Client-side Hermite interpolation for real-time display.
+
+### Derived Values
+Velocity, distance, and altitude are computed from raw state vectors. Mission Elapsed Time is derived from the launch epoch. Ground track coordinates use IAU GMST for ECI-to-ECEF conversion. Moon position is approximate.
+
+### Timeline
+Mission events based on NASA published mission plan. Times are approximate and subject to real-time mission decisions.
+
+## External Resources
+
+- [JPL Horizons System](https://ssd.jpl.nasa.gov/horizons/)
+- [NASA AROW (Artemis Real-time Orbit Website)](https://www.nasa.gov/missions/artemis-ii/arow/)

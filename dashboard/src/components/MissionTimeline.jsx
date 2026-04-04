@@ -6,20 +6,45 @@ import { ChevronDown } from 'lucide-react';
 export default function MissionTimeline({ currentTime, expanded: alwaysExpanded = false }) {
   const now = currentTime || Date.now();
   const [expandedIdx, setExpandedIdx] = useState(null);
+  const [collapsed, setCollapsed] = useState(true);
+
+  // Find the active event index
+  const activeIdx = MISSION_EVENTS.findIndex((event, i) => {
+    const isPast = event.time.getTime() <= now;
+    const isActive = isPast && (
+      i === MISSION_EVENTS.length - 1 ||
+      MISSION_EVENTS[i + 1].time.getTime() > now
+    );
+    return isActive;
+  });
+
+  const showCollapsed = collapsed && !alwaysExpanded;
+  const eventsToShow = showCollapsed
+    ? MISSION_EVENTS.filter((_, i) => i === activeIdx)
+    : MISSION_EVENTS;
 
   return (
     <div className="bg-space-800 rounded-2xl border border-border p-4 md:p-5">
-      <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-4">Mission Timeline</h3>
+      <button
+        onClick={() => !alwaysExpanded && setCollapsed(c => !c)}
+        className="flex items-center gap-2 w-full mb-4"
+      >
+        <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Mission Timeline</h3>
+        {!alwaysExpanded && (
+          <ChevronDown
+            size={12}
+            className={`text-label transition-transform ${collapsed ? '' : 'rotate-180'}`}
+          />
+        )}
+      </button>
       <div className="relative">
-        <div className="absolute left-[15px] top-3 bottom-3 w-px bg-border" />
+        {!showCollapsed && <div className="absolute left-[15px] top-3 bottom-3 w-px bg-border" />}
 
         <div className="space-y-0.5">
-          {MISSION_EVENTS.map((event, i) => {
+          {eventsToShow.map((event) => {
+            const i = MISSION_EVENTS.indexOf(event);
             const isPast = event.time.getTime() <= now;
-            const isActive = isPast && (
-              i === MISSION_EVENTS.length - 1 ||
-              MISSION_EVENTS[i + 1].time.getTime() > now
-            );
+            const isActive = i === activeIdx;
             const isExpanded = alwaysExpanded || expandedIdx === i;
             const Icon = EVENT_ICONS[event.type];
 
@@ -53,6 +78,11 @@ export default function MissionTimeline({ currentTime, expanded: alwaysExpanded 
                     {isActive && (
                       <span className="text-[9px] uppercase tracking-wider bg-active/15 text-active px-1.5 py-0.5 rounded font-medium">
                         Active
+                      </span>
+                    )}
+                    {isPast && !isActive && (
+                      <span className="text-[9px] uppercase tracking-wider bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded font-medium">
+                        Successful
                       </span>
                     )}
                     <ChevronDown

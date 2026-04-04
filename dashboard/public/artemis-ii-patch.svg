@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 56 56" width="56" height="56">
+  <circle cx="28" cy="28" r="27" fill="#0B1026" stroke="#4A90D9" stroke-width="1.5"/>
+  <path d="M28 8 L32 24 L28 20 L24 24 Z" fill="#E8E8E8" opacity="0.9"/>
+  <circle cx="38" cy="34" r="6" fill="none" stroke="#C0C0C0" stroke-width="1" opacity="0.6"/>
+  <text x="28" y="48" text-anchor="middle" fill="#4A90D9" font-family="Arial,sans-serif" font-size="7" font-weight="bold">ARTEMIS II</text>
+</svg>
