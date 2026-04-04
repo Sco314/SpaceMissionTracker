@@ -99,9 +99,14 @@ function formatDuration(ms) {
   const pad = (n) => String(n).padStart(2, '0');
 
   if (days > 0) {
-    return `${days}D ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+    return `${days} ${days === 1 ? 'Day' : 'Days'} ${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
   }
   return `${pad(hours)}:${pad(minutes)}:${pad(seconds)}`;
+}
+
+/** Format a countdown duration from milliseconds. Always positive. */
+export function formatCountdown(ms) {
+  return formatDuration(Math.abs(ms));
 }
 
 /**

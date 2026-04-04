@@ -1,5 +1,5 @@
 import { useRef, useEffect, useState, useCallback } from 'react';
-import { ZoomIn, ZoomOut, RotateCcw, Crosshair, Maximize } from 'lucide-react';
+import { ZoomIn, ZoomOut, RotateCcw, Crosshair } from 'lucide-react';
 
 const CANVAS_W = 900;
 const CANVAS_H = 520;
@@ -95,10 +95,118 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
   const canvasRef = useRef(null);
   const [viewMode, setViewMode] = useState('auto');
   const [zoomLevel, setZoomLevel] = useState(1);
+  const [panOffset, setPanOffset] = useState({ x: 0, y: 0 });
+  const touchRef = useRef({ lastDist: null, lastCenter: null, lastPan: null });
+  const mouseRef = useRef({ isDown: false, lastPos: null });
 
   const zoomIn = useCallback(() => setZoomLevel(z => Math.min(z * 1.5, 10)), []);
   const zoomOut = useCallback(() => setZoomLevel(z => Math.max(z / 1.5, 0.3)), []);
-  const resetView = useCallback(() => { setZoomLevel(1); setViewMode('auto'); }, []);
+  const resetView = useCallback(() => {
+    setZoomLevel(1);
+    setPanOffset({ x: 0, y: 0 });
+    setViewMode('auto');
+  }, []);
+
+  // Mouse wheel zoom
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const handleWheel = (e) => {
+      e.preventDefault();
+      const delta = e.deltaY > 0 ? 1 / 1.15 : 1.15;
+      setZoomLevel(z => Math.min(Math.max(z * delta, 0.3), 10));
+    };
+    canvas.addEventListener('wheel', handleWheel, { passive: false });
+    return () => canvas.removeEventListener('wheel', handleWheel);
+  }, []);
+
+  // Touch events for pinch-zoom and pan
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const getTouchDist = (touches) => {
+      const dx = touches[0].clientX - touches[1].clientX;
+      const dy = touches[0].clientY - touches[1].clientY;
+      return Math.sqrt(dx * dx + dy * dy);
+    };
+
+    const handleTouchStart = (e) => {
+      if (e.touches.length === 2) {
+        touchRef.current.lastDist = getTouchDist(e.touches);
+      } else if (e.touches.length === 1) {
+        touchRef.current.lastPan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const handleTouchMove = (e) => {
+      if (e.touches.length === 2) {
+        e.preventDefault();
+        const dist = getTouchDist(e.touches);
+        if (touchRef.current.lastDist) {
+          const scale = dist / touchRef.current.lastDist;
+          setZoomLevel(z => Math.min(Math.max(z * scale, 0.3), 10));
+        }
+        touchRef.current.lastDist = dist;
+      } else if (e.touches.length === 1 && touchRef.current.lastPan) {
+        e.preventDefault();
+        const dx = e.touches[0].clientX - touchRef.current.lastPan.x;
+        const dy = e.touches[0].clientY - touchRef.current.lastPan.y;
+        setPanOffset(p => ({ x: p.x + dx, y: p.y + dy }));
+        touchRef.current.lastPan = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+      }
+    };
+
+    const handleTouchEnd = () => {
+      touchRef.current.lastDist = null;
+      touchRef.current.lastPan = null;
+    };
+
+    canvas.addEventListener('touchstart', handleTouchStart, { passive: true });
+    canvas.addEventListener('touchmove', handleTouchMove, { passive: false });
+    canvas.addEventListener('touchend', handleTouchEnd, { passive: true });
+    return () => {
+      canvas.removeEventListener('touchstart', handleTouchStart);
+      canvas.removeEventListener('touchmove', handleTouchMove);
+      canvas.removeEventListener('touchend', handleTouchEnd);
+    };
+  }, []);
+
+  // Mouse drag to pan
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const handleMouseDown = (e) => {
+      mouseRef.current.isDown = true;
+      mouseRef.current.lastPos = { x: e.clientX, y: e.clientY };
+      canvas.style.cursor = 'grabbing';
+    };
+
+    const handleMouseMove = (e) => {
+      if (!mouseRef.current.isDown || !mouseRef.current.lastPos) return;
+      const dx = e.clientX - mouseRef.current.lastPos.x;
+      const dy = e.clientY - mouseRef.current.lastPos.y;
+      setPanOffset(p => ({ x: p.x + dx, y: p.y + dy }));
+      mouseRef.current.lastPos = { x: e.clientX, y: e.clientY };
+    };
+
+    const handleMouseUp = () => {
+      mouseRef.current.isDown = false;
+      mouseRef.current.lastPos = null;
+      canvas.style.cursor = 'grab';
+    };
+
+    canvas.style.cursor = 'grab';
+    canvas.addEventListener('mousedown', handleMouseDown);
+    window.addEventListener('mousemove', handleMouseMove);
+    window.addEventListener('mouseup', handleMouseUp);
+    return () => {
+      canvas.removeEventListener('mousedown', handleMouseDown);
+      window.removeEventListener('mousemove', handleMouseMove);
+      window.removeEventListener('mouseup', handleMouseUp);
+    };
+  }, []);
 
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -132,6 +240,16 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       maxY: cy + rangeY / 2,
     };
 
+    // Scale factor to convert panOffset (pixels) to coordinate space
+    const pxToCoordX = (viewBounds.maxX - viewBounds.minX) / CANVAS_W;
+    const pxToCoordY = (viewBounds.maxY - viewBounds.minY) / CANVAS_H;
+
+    // Apply pan offset in coordinate space
+    viewBounds.minX -= panOffset.x * pxToCoordX;
+    viewBounds.maxX -= panOffset.x * pxToCoordX;
+    viewBounds.minY += panOffset.y * pxToCoordY; // inverted Y
+    viewBounds.maxY += panOffset.y * pxToCoordY;
+
     const toCanvas = (x, y) => {
       const px = ((x - viewBounds.minX) / (viewBounds.maxX - viewBounds.minX)) * CANVAS_W;
       const py = CANVAS_H - ((y - viewBounds.minY) / (viewBounds.maxY - viewBounds.minY)) * CANVAS_H;
@@ -141,7 +259,18 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
     // Earth
     const [earthX, earthY] = toCanvas(0, 0);
     const earthScale = CANVAS_W / (viewBounds.maxX - viewBounds.minX);
-    const earthR = Math.max(EARTH_RADIUS_KM * earthScale, 6);
+    const earthR = Math.max(EARTH_RADIUS_KM * earthScale, 10);
+
+    // Earth atmosphere glow
+    const atmosR = earthR + 4;
+    const atmosGrad = ctx.createRadialGradient(earthX, earthY, earthR * 0.9, earthX, earthY, atmosR);
+    atmosGrad.addColorStop(0, 'rgba(74, 144, 217, 0.2)');
+    atmosGrad.addColorStop(1, 'rgba(74, 144, 217, 0)');
+    ctx.beginPath();
+    ctx.arc(earthX, earthY, atmosR, 0, Math.PI * 2);
+    ctx.fillStyle = atmosGrad;
+    ctx.fill();
+
     const earthGrad = ctx.createRadialGradient(earthX - 1, earthY - 1, 0, earthX, earthY, earthR);
     earthGrad.addColorStop(0, '#4a90d9');
     earthGrad.addColorStop(0.7, '#2563eb');
@@ -154,12 +283,12 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
     ctx.fillStyle = '#475569';
     ctx.font = '10px Inter, system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('Earth', earthX, earthY + earthR + 13);
+    ctx.fillText('Earth', earthX, earthY + earthR + 14);
 
     // Moon
     if (telemetry?.moonPosition) {
       const [moonX, moonY] = toCanvas(telemetry.moonPosition.x, telemetry.moonPosition.y);
-      const moonR = Math.max(1737 * earthScale, 4);
+      const moonR = Math.max(1737 * earthScale, 7);
       const moonGrad = ctx.createRadialGradient(moonX - 1, moonY - 1, 0, moonX, moonY, moonR);
       moonGrad.addColorStop(0, '#d1d5db');
       moonGrad.addColorStop(0.8, '#9ca3af');
@@ -169,8 +298,22 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       ctx.fillStyle = moonGrad;
       ctx.fill();
 
+      // Subtle craters
+      if (moonR > 5) {
+        ctx.beginPath();
+        ctx.arc(moonX - moonR * 0.3, moonY - moonR * 0.2, moonR * 0.2, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(107, 114, 128, 0.4)';
+        ctx.fill();
+        ctx.beginPath();
+        ctx.arc(moonX + moonR * 0.25, moonY + moonR * 0.3, moonR * 0.15, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(107, 114, 128, 0.3)';
+        ctx.fill();
+      }
+
       ctx.fillStyle = '#475569';
-      ctx.fillText('Moon', moonX, moonY + moonR + 13);
+      ctx.font = '10px Inter, system-ui';
+      ctx.textAlign = 'center';
+      ctx.fillText('Moon', moonX, moonY + moonR + 14);
     }
 
     // Trajectory path — split past/future
@@ -209,35 +352,48 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       }
     }
 
-    // Current position (Orion)
+    // Current position (Orion) — directional triangle
     if (telemetry) {
       const [ox, oy] = toCanvas(telemetry.position.x, telemetry.position.y);
 
       // Subtle glow
-      const glowGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, 10);
+      const glowGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, 14);
       glowGrad.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
       glowGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
       ctx.beginPath();
-      ctx.arc(ox, oy, 10, 0, Math.PI * 2);
+      ctx.arc(ox, oy, 14, 0, Math.PI * 2);
       ctx.fillStyle = glowGrad;
       ctx.fill();
 
-      // Dot
+      // Draw directional triangle using velocity vector
+      const vx = telemetry.velocity?.vx || 0;
+      const vy = telemetry.velocity?.vy || 0;
+      const angle = Math.atan2(-vy, vx); // negate vy due to canvas Y inversion
+      const size = 6;
+
+      ctx.save();
+      ctx.translate(ox, oy);
+      ctx.rotate(-angle);
       ctx.beginPath();
-      ctx.arc(ox, oy, 3, 0, Math.PI * 2);
+      ctx.moveTo(size, 0);
+      ctx.lineTo(-size * 0.6, -size * 0.5);
+      ctx.lineTo(-size * 0.6, size * 0.5);
+      ctx.closePath();
       ctx.fillStyle = '#f59e0b';
       ctx.fill();
+      ctx.restore();
 
       // Label
       ctx.fillStyle = '#94a3b8';
       ctx.font = '500 10px Inter, system-ui';
-      ctx.fillText('Orion', ox, oy - 10);
+      ctx.textAlign = 'center';
+      ctx.fillText('Orion', ox, oy - 12);
     }
 
     // Scale bar
     drawScaleBar(ctx, viewBounds);
 
-  }, [trajectoryPath, telemetry, viewMode, zoomLevel]);
+  }, [trajectoryPath, telemetry, viewMode, zoomLevel, panOffset]);
 
   return (
     <div className="bg-space-800 rounded-2xl border border-border overflow-hidden">
@@ -261,7 +417,7 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
         </div>
       </div>
 
-      <div className="relative">
+      <div className="relative touch-none">
         <canvas
           ref={canvasRef}
           style={{ width: '100%', height: 'auto', display: 'block' }}

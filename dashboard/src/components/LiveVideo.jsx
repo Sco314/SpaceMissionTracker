@@ -1,14 +1,44 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Video, ExternalLink, Radio } from 'lucide-react';
 
 const STREAMS = [
-  { id: 'nasa-live', label: 'NASA Live', videoId: '21X5lGlDOfg' },
-  { id: 'mission', label: 'Mission Coverage', videoId: 'nA9UZF-SZoQ' },
+  { id: 'orion-views', label: 'Views from Orion', videoId: '6RwfNBtepa4' },
+  { id: 'mission', label: 'Mission Coverage', videoId: 'm3kR2KK8TEs' },
 ];
+
+const NASA_CHANNEL_ID = 'UCLA_DiR1FfKNvjuUpBHmylQ';
 
 export default function LiveVideo() {
   const [activeStream, setActiveStream] = useState(STREAMS[0]);
   const [loaded, setLoaded] = useState(false);
+  const [rssVideos, setRssVideos] = useState([]);
+
+  useEffect(() => {
+    const feedUrl = `https://www.youtube.com/feeds/videos.xml?channel_id=${NASA_CHANNEL_ID}`;
+    const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(feedUrl)}`;
+
+    fetch(proxyUrl)
+      .then(r => r.text())
+      .then(xml => {
+        const videos = [];
+        // Extract video IDs and titles using regex (namespace-safe)
+        const idMatches = [...xml.matchAll(/<yt:videoId>([^<]+)<\/yt:videoId>/g)];
+        const titleMatches = [...xml.matchAll(/<media:title>([^<]+)<\/media:title>/g)];
+
+        idMatches.forEach((match, idx) => {
+          const title = titleMatches[idx]?.[1] || '';
+          if (title.toLowerCase().includes('artemis')) {
+            const videoId = match[1];
+            // Skip videos already in curated streams
+            if (!STREAMS.some(s => s.videoId === videoId)) {
+              videos.push({ id: videoId, title });
+            }
+          }
+        });
+        setRssVideos(videos);
+      })
+      .catch(() => {}); // Silently fail if CORS proxy is down
+  }, []);
 
   return (
     <div className="bg-space-800 rounded-2xl border border-border overflow-hidden">
@@ -38,17 +68,25 @@ export default function LiveVideo() {
         {!loaded && (
           <button
             onClick={() => setLoaded(true)}
-            className="absolute inset-0 flex flex-col items-center justify-center gap-3 cursor-pointer group"
+            className="absolute inset-0 cursor-pointer group"
           >
-            <div className="w-14 h-14 rounded-full bg-space-700 border border-border flex items-center justify-center group-hover:bg-space-600 transition-colors">
-              <Video size={24} className="text-slate-300" />
+            <img
+              src={`https://img.youtube.com/vi/${activeStream.videoId}/hqdefault.jpg`}
+              alt={activeStream.label}
+              className="w-full h-full object-cover"
+            />
+            <div className="absolute inset-0 flex items-center justify-center bg-black/30">
+              <div className="w-14 h-14 rounded-full bg-red-600 flex items-center justify-center group-hover:bg-red-500 transition-colors">
+                <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M8 5v14l11-7z"/>
+                </svg>
+              </div>
             </div>
-            <span className="text-xs text-label">Click to load stream</span>
           </button>
         )}
         {loaded && (
           <iframe
-            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=0&modestbranding=1&rel=0`}
+            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&mute=1&modestbranding=1&rel=0`}
             title={activeStream.label}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
@@ -57,6 +95,28 @@ export default function LiveVideo() {
           />
         )}
       </div>
+
+      {rssVideos.length > 0 && (
+        <div className="px-4 py-2 border-t border-border">
+          <p className="text-[10px] text-label mb-2">More Artemis Videos</p>
+          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+            {rssVideos.map(v => (
+              <button
+                key={v.id}
+                onClick={() => { setActiveStream({ id: v.id, label: v.title, videoId: v.id }); setLoaded(true); }}
+                className="flex-shrink-0 w-32 group text-left"
+              >
+                <img
+                  src={`https://img.youtube.com/vi/${v.id}/mqdefault.jpg`}
+                  className="w-full rounded"
+                  alt={v.title}
+                />
+                <p className="text-[9px] text-label mt-1 truncate">{v.title}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
 
       <div className="px-4 py-2 flex items-center justify-between border-t border-border">
         <div className="flex items-center gap-1.5">

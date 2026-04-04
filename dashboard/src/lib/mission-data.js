@@ -56,6 +56,41 @@ export const MISSION_EVENTS = [
   },
 ];
 
+/** Curated list of known Artemis II YouTube videos */
+export const KNOWN_ARTEMIS_VIDEOS = [
+  { id: '6RwfNBtepa4', title: 'Views from Orion' },
+  { id: 'm3kR2KK8TEs', title: 'Mission Coverage' },
+];
+
+/** Determine mission phase relative to lunar flyby */
+export function getMissionPhase(nowMs) {
+  const flyby = MISSION_EVENTS.find(e => e.type === 'lunar-flyby');
+  const returnCoast = MISSION_EVENTS.find(e => e.type === 'return-coast');
+  const entry = MISSION_EVENTS.find(e => e.type === 'entry-interface');
+  if (nowMs < flyby.time.getTime()) return 'pre-flyby';
+  if (nowMs < returnCoast.time.getTime()) return 'flyby';
+  if (nowMs < entry.time.getTime()) return 'post-flyby';
+  return 'post-entry';
+}
+
+/** Time remaining until lunar flyby (ms) */
+export function getTimeToMoon(nowMs) {
+  const flyby = MISSION_EVENTS.find(e => e.type === 'lunar-flyby');
+  return flyby.time.getTime() - nowMs;
+}
+
+/** Time remaining until splashdown (ms) */
+export function getTimeToEarth(nowMs) {
+  const splashdown = MISSION_EVENTS.find(e => e.type === 'splashdown');
+  return splashdown.time.getTime() - nowMs;
+}
+
+/** Time elapsed since lunar flyby (ms) */
+export function getTimeSinceFlyby(nowMs) {
+  const flyby = MISSION_EVENTS.find(e => e.type === 'lunar-flyby');
+  return nowMs - flyby.time.getTime();
+}
+
 export const CREW = [
   {
     name: 'Reid Wiseman',
