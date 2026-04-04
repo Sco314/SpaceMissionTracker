@@ -20,20 +20,18 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-space-900">
       {/* Header */}
-      <header className="border-b border-border bg-space-800/90 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-[1440px] mx-auto px-4">
-          <div className="flex items-center justify-between py-1.5">
-            <div className="flex items-center gap-2">
-              <img src="/artemis-ii-patch.svg" alt="Artemis II" className="w-6 h-6 rounded" />
-              <div className="leading-none">
-                <h1 className="text-xs font-semibold text-white tracking-wide">Artemis II</h1>
-                <p className="text-[8px] uppercase tracking-widest text-label mt-0.5">Mission Dashboard</p>
-              </div>
+      <header className="bg-space-800/95 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between h-9 sm:h-10">
+            <div className="flex items-center gap-2 min-w-0">
+              <img src="/artemis-ii-patch.svg" alt="" className="w-5 h-5 flex-shrink-0" />
+              <span className="text-xs font-semibold text-white truncate">Artemis II</span>
+              <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
             </div>
 
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2.5">
               {telemetry && (
-                <span className="text-[10px] font-mono text-slate-300 hidden md:block">
+                <span className="text-[9px] font-mono text-slate-400 hidden md:block">
                   MET {formatMET(telemetry.met)}
                 </span>
               )}
@@ -49,6 +47,7 @@ function Dashboard() {
 
           <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
+        <div className="border-b border-border" />
       </header>
 
       {/* Main content */}
@@ -57,7 +56,7 @@ function Dashboard() {
           <>
             <TelemetryPanel telemetry={telemetry} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
               <div className="lg:col-span-2">
                 <LiveVideo />
               </div>
