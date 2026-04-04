@@ -11,21 +11,24 @@ const TABS = [
 
 export default function Navigation({ activeTab, onTabChange }) {
   return (
-    <nav className="flex items-center gap-1 overflow-x-auto scrollbar-none">
+    <nav className="flex items-center justify-between sm:justify-start sm:gap-1 -mb-px">
       {TABS.map(({ id, label, icon: Icon }) => {
         const isActive = activeTab === id;
         return (
           <button
             key={id}
             onClick={() => onTabChange(id)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-xs font-medium rounded-lg transition-colors whitespace-nowrap ${
+            className={`relative flex flex-col sm:flex-row items-center gap-0.5 sm:gap-1.5 px-2.5 sm:px-3 py-1.5 text-[10px] sm:text-xs font-medium transition-colors whitespace-nowrap ${
               isActive
-                ? 'text-white bg-space-700'
-                : 'text-label hover:text-slate-300 hover:bg-space-800'
+                ? 'text-white'
+                : 'text-label hover:text-slate-300'
             }`}
           >
-            <Icon size={14} strokeWidth={1.5} />
-            <span className="hidden sm:inline">{label}</span>
+            <Icon size={15} strokeWidth={1.5} />
+            <span className="sm:inline">{label}</span>
+            {isActive && (
+              <span className="absolute bottom-0 left-1 right-1 h-[2px] rounded-t bg-indigo-500" />
+            )}
           </button>
         );
       })}

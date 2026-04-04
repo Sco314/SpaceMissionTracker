@@ -6,19 +6,19 @@ import { getMissionPhase, getTimeToMoon, getTimeToEarth, getTimeSinceFlyby } fro
 function MetricCard({ label, value, unit, iconKey, subtitle }) {
   const Icon = METRIC_ICONS[iconKey];
   return (
-    <div className="bg-space-800 rounded-2xl p-3 sm:p-4 border border-border">
-      <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-        {Icon && <Icon size={13} className="text-label" strokeWidth={1.5} />}
-        <span className="text-[10px] uppercase tracking-wider text-label font-medium">{label}</span>
+    <div className="bg-space-800 rounded-xl px-2.5 py-2 sm:p-3 border border-border">
+      <div className="flex items-center gap-1 mb-0.5">
+        {Icon && <Icon size={11} className="text-label" strokeWidth={1.5} />}
+        <span className="text-[9px] uppercase tracking-wider text-label font-medium leading-none">{label}</span>
       </div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-lg sm:text-2xl md:text-3xl font-mono font-semibold text-slate-100">
+      <div className="flex items-baseline gap-1">
+        <span className="text-base sm:text-lg md:text-2xl font-mono font-semibold text-slate-100 leading-tight">
           {value}
         </span>
-        {unit && <span className="text-xs text-label">{unit}</span>}
+        {unit && <span className="text-[10px] text-label">{unit}</span>}
       </div>
       {subtitle && (
-        <p className="text-[10px] text-label font-mono mt-1">{subtitle}</p>
+        <p className="text-[9px] text-label font-mono mt-0.5 leading-none">{subtitle}</p>
       )}
     </div>
   );
@@ -29,9 +29,9 @@ export default function TelemetryPanel({ telemetry }) {
 
   if (!telemetry) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-space-800 rounded-2xl p-3 sm:p-4 border border-border animate-pulse h-[88px]" />
+          <div key={i} className="bg-space-800 rounded-xl px-2.5 py-2 border border-border animate-pulse h-[60px]" />
         ))}
       </div>
     );
@@ -60,7 +60,7 @@ export default function TelemetryPanel({ telemetry }) {
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-2">
       <MetricCard
         label="Mission Elapsed Time"
         value={formatMET(telemetry.met)}
