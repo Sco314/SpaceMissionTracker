@@ -110,3 +110,15 @@ function formatDuration(ms) {
 export function formatNumber(n, decimals = 0) {
   return n.toFixed(decimals).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
 }
+
+/** Unit-aware distance formatting */
+export function formatDistanceWithUnit(km, unit) {
+  if (unit === 'mi') return { value: formatNumber(kmToMiles(km)), label: 'mi' };
+  return { value: formatNumber(km), label: 'km' };
+}
+
+/** Unit-aware speed formatting */
+export function formatSpeedWithUnit(kms, unit) {
+  if (unit === 'mph') return { value: formatNumber(kmsToMph(kms)), label: 'mph' };
+  return { value: kms.toFixed(2), label: 'km/s' };
+}

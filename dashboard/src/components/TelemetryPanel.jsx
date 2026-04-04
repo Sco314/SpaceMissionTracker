@@ -1,61 +1,66 @@
-import { formatMET, formatNumber } from '../lib/coordinates.js';
+import { formatMET } from '../lib/coordinates.js';
+import { METRIC_ICONS } from '../lib/icon-map.js';
+import { useUnits } from '../lib/units-context.jsx';
 
-function MetricCard({ label, value, unit, color, icon }) {
+function MetricCard({ label, value, unit, iconKey }) {
+  const Icon = METRIC_ICONS[iconKey];
   return (
-    <div className="bg-space-800 rounded-xl p-4 md:p-5 border border-space-600/50 hover:border-space-500 transition-colors">
-      <div className="flex items-center gap-2 mb-2">
-        <span className="text-lg">{icon}</span>
-        <span className="text-xs uppercase tracking-widest text-slate-400 font-medium">{label}</span>
+    <div className="bg-space-800 rounded-2xl p-4 border border-border">
+      <div className="flex items-center gap-1.5 mb-2">
+        {Icon && <Icon size={13} className="text-label" strokeWidth={1.5} />}
+        <span className="text-[10px] uppercase tracking-wider text-label font-medium">{label}</span>
       </div>
-      <div className="flex items-baseline gap-2">
-        <span className={`text-2xl md:text-3xl font-mono font-bold`} style={{ color }}>
+      <div className="flex items-baseline gap-1.5">
+        <span className="text-2xl md:text-3xl font-mono font-semibold text-slate-100">
           {value}
         </span>
-        {unit && <span className="text-sm text-slate-400">{unit}</span>}
+        {unit && <span className="text-xs text-label">{unit}</span>}
       </div>
     </div>
   );
 }
 
 export default function TelemetryPanel({ telemetry }) {
+  const { formatDistance, formatSpeed } = useUnits();
+
   if (!telemetry) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
         {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-space-800 rounded-xl p-5 border border-space-600/50 animate-pulse h-24" />
+          <div key={i} className="bg-space-800 rounded-2xl p-4 border border-border animate-pulse h-[88px]" />
         ))}
       </div>
     );
   }
 
+  const distEarth = formatDistance(telemetry.distEarthKm);
+  const distMoon = formatDistance(telemetry.distMoonKm);
+  const vel = formatSpeed(telemetry.velocityKms);
+
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 md:gap-4">
+    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
       <MetricCard
         label="Mission Elapsed Time"
         value={formatMET(telemetry.met)}
-        color="var(--color-met)"
-        icon="⏱"
+        iconKey="met"
       />
       <MetricCard
         label="Velocity"
-        value={formatNumber(telemetry.velocityMph)}
-        unit="MPH"
-        color="var(--color-velocity)"
-        icon="⚡"
+        value={vel.value}
+        unit={vel.unit}
+        iconKey="velocity"
       />
       <MetricCard
         label="Distance from Earth"
-        value={formatNumber(telemetry.distEarthMiles)}
-        unit="MILES"
-        color="var(--color-earth)"
-        icon="🌍"
+        value={distEarth.value}
+        unit={distEarth.unit}
+        iconKey="distEarth"
       />
       <MetricCard
         label="Distance from Moon"
-        value={formatNumber(telemetry.distMoonMiles)}
-        unit="MILES"
-        color="var(--color-lunar)"
-        icon="🌙"
+        value={distMoon.value}
+        unit={distMoon.unit}
+        iconKey="distMoon"
       />
     </div>
   );

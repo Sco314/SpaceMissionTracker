@@ -1,57 +1,80 @@
+import { useState } from 'react';
 import { MISSION_EVENTS } from '../lib/mission-data.js';
+import { EVENT_ICONS } from '../lib/icon-map.js';
+import { ChevronDown } from 'lucide-react';
 
-export default function MissionTimeline({ currentTime }) {
+export default function MissionTimeline({ currentTime, expanded: alwaysExpanded = false }) {
   const now = currentTime || Date.now();
+  const [expandedIdx, setExpandedIdx] = useState(null);
 
   return (
-    <div className="bg-space-800 rounded-xl border border-space-600/50 p-4 md:p-5">
-      <h3 className="text-sm font-medium text-slate-300 uppercase tracking-wider mb-4">Mission Timeline</h3>
+    <div className="bg-space-800 rounded-2xl border border-border p-4 md:p-5">
+      <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-4">Mission Timeline</h3>
       <div className="relative">
-        {/* Vertical line */}
-        <div className="absolute left-[19px] top-2 bottom-2 w-px bg-space-600" />
+        <div className="absolute left-[15px] top-3 bottom-3 w-px bg-border" />
 
-        <div className="space-y-1">
+        <div className="space-y-0.5">
           {MISSION_EVENTS.map((event, i) => {
             const isPast = event.time.getTime() <= now;
             const isActive = isPast && (
               i === MISSION_EVENTS.length - 1 ||
               MISSION_EVENTS[i + 1].time.getTime() > now
             );
+            const isExpanded = alwaysExpanded || expandedIdx === i;
+            const Icon = EVENT_ICONS[event.type];
 
             return (
-              <div key={i} className={`flex items-start gap-3 pl-1 py-2 rounded-lg transition-colors ${isActive ? 'bg-space-700/50' : ''}`}>
-                {/* Dot */}
-                <div className="relative z-10 mt-0.5">
-                  <div className={`w-[10px] h-[10px] rounded-full border-2 ${
-                    isPast
-                      ? isActive
-                        ? 'bg-accent border-accent-bright shadow-[0_0_8px_rgba(59,130,246,0.5)]'
-                        : 'bg-accent/60 border-accent/60'
-                      : 'bg-space-700 border-space-500'
-                  }`} />
+              <button
+                key={i}
+                onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
+                className={`w-full text-left flex items-start gap-3 px-1 py-2.5 rounded-lg transition-colors ${
+                  isActive ? 'bg-space-700/40' : 'hover:bg-space-700/20'
+                }`}
+              >
+                <div className="relative z-10 mt-0.5 flex-shrink-0">
+                  <div className={`w-[30px] h-[30px] rounded-lg flex items-center justify-center ${
+                    isActive
+                      ? 'bg-active/15 text-active'
+                      : isPast
+                        ? 'bg-space-600/50 text-slate-400'
+                        : 'bg-space-700 text-label'
+                  }`}>
+                    {Icon && <Icon size={14} strokeWidth={1.5} />}
+                  </div>
                 </div>
 
-                {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-sm">{event.icon}</span>
-                    <span className={`text-sm font-medium ${isPast ? 'text-slate-200' : 'text-slate-500'}`}>
+                    <span className={`text-sm font-medium ${
+                      isActive ? 'text-slate-100' : isPast ? 'text-slate-300' : 'text-label'
+                    }`}>
                       {event.label}
                     </span>
                     {isActive && (
-                      <span className="text-[10px] uppercase tracking-wider bg-accent/20 text-accent-bright px-1.5 py-0.5 rounded font-medium">
-                        Current
+                      <span className="text-[9px] uppercase tracking-wider bg-active/15 text-active px-1.5 py-0.5 rounded font-medium">
+                        Active
                       </span>
                     )}
+                    <ChevronDown
+                      size={12}
+                      className={`ml-auto text-label transition-transform ${isExpanded ? 'rotate-180' : ''}`}
+                    />
                   </div>
-                  <p className={`text-xs mt-0.5 ${isPast ? 'text-slate-400' : 'text-slate-600'}`}>
+                  <p className={`text-xs mt-0.5 leading-relaxed ${
+                    isPast ? 'text-label' : 'text-space-500'
+                  }`}>
                     {event.description}
                   </p>
-                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                  {isExpanded && event.details && (
+                    <p className="text-xs text-label mt-2 leading-relaxed border-t border-border pt-2">
+                      {event.details}
+                    </p>
+                  )}
+                  <p className="text-[10px] text-space-500 font-mono mt-1">
                     {event.time.toISOString().replace('T', ' ').slice(0, 19)} UTC
                   </p>
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
