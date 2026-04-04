@@ -522,6 +522,4 @@ https://ssd.jpl.nasa.gov/api/horizons.api?format=json
 |JPL Horizons API                     |`ssd.jpl.nasa.gov` (JPL)            |✅ Official NASA/JPL|**Yes — Moon distance**|Fetch precomputed Moon vectors for mission window|
 |NASA AROW                            |`nasa.gov/trackartemis`             |✅ Official NASA    |No — link/embed        |Prominent link; iframe if CSP allows             |
 |NASA Live TV                         |YouTube (official NASA channel)     |✅ Official         |No — video             |Embed with IFrame API keep-alive                 |
-|Wikimedia Commons (Earth/Moon images)|`upload.wikimedia.org`              |✅ Public domain    |No                     |Keep; gradient fallback                          |
-|Google Fonts                         |`fonts.googleapis.com`              |✅                  |No                     |Keep or self-host                                |
-|GCS Bucket `p-2-cen1`                |`storage.googleapis.com` (anonymous)|❌ Unknown          |—                      |**Do not use**                                   |
+|Wikimedia Commons (Earth/Moon images)|`upload.wikimedia.org`              |✅ Public domain    |No                     |Keep; gradient fallback                          |                                   |
