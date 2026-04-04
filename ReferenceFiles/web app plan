@@ -1,7 +1,6 @@
 # Artemis II Mission Tracker — Content, Data Source & Planning Report
 
-**Purpose:** Audit of alternative website + evaluation of available NASA data sources to plan a superior replacement tracker.
-**Report Date:** 2026-04-03
+**Purpose:** create alternative website for tracking and gathering of space missions specifically Artemis II
 **Sources Reviewed:**
 
 1.
@@ -46,7 +45,170 @@ The ephemeris OEM file is a separate, publicly downloadable **planning/predictio
 |Download ephemeris files from the page|✅ Files are publicly linked at bottom of the NASA tracking page; version-stamped|
 |State vectors when published by AROW  |✅ NASA commits to publishing these; watch the tracking page and @NASA_Orion     |
 
-**Conclusion:** We cannot pull live telemetry from AROW directly. Our best approach is: (1) use NASA’s downloadable ephemeris for trajectory/position, (2) link prominently to AROW as the official NASA tool, and (3) monitor for any published state vector feeds as the mission progresses.
+-----
+
+Great screenshot — this actually tells us a lot. Let me think through all the extraction angles carefully.​​​​​​​​​​​​​​​​
+
+Good — nasa.gov is blocked at the sandbox network layer (my network restriction, not NASA’s). That’s fine — I have enough to give you a complete answer. Let me lay out all the real extraction options.
+
+How AROW Loads and Renders
+The page source tells us exactly how it works:
+
+Browser loads HTML
+  → loads WebBuildMar27.loader.js (Unity's bootstrap)
+  → loader fetches WebBuildMar27.wasm  (compiled C# game logic — binary)
+  → loader fetches WebBuildMar27.data  (Unity assets — textures, models)
+  → loader fetches WebBuildMar27.framework.js (Unity's JS runtime)
+  → createUnityInstance() boots the app inside <canvas id="unity-canvas">
+  → Unity renders frames to the canvas via WebGL
+  → ALL text numbers you see are pixels painted to the canvas — not DOM elements
+
+
+The values in your screenshot — 3,188 MPH, 127,703 MILES, 142,396 MILES — are not in the DOM at all. They’re just pixels on a <canvas>. That’s why normal scraping fails completely.
+
+Extraction Strategies (Ranked by Value)
+🥇 Strategy 1: Network Request Interception (Best option)
+The Unity binary has to get the telemetry data from somewhere — it makes HTTP/WebSocket calls just like any other browser code. Playwright can intercept every network request the page makes before it reaches the server.
+
+from playwright.async_api import async_playwright
+import asyncio, json
+
+async def intercept_arow():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+
+        captured = []
+
+        # Intercept ALL network requests the Unity app makes
+        async def handle_request(request):
+            url = request.url
+            # Log anything that isn't the Unity binary assets themselves
+            if not any(x in url for x in ['.wasm', '.data', '.js', 'fonts', 'png']):
+                print(f"🔍 Interesting fetch: {url}")
+                captured.append(url)
+
+        async def handle_response(response):
+            url = response.url
+            if not any(x in url for x in ['.wasm', '.data', '.js', 'fonts', 'png']):
+                try:
+                    body = await response.text()
+                    print(f"📦 Response from {url}:\n{body[:500]}")
+                except:
+                    pass
+
+        page.on("request", handle_request)
+        page.on("response", handle_response)
+
+        await page.goto("https://www.nasa.gov/missions/artemis-ii/arow/")
+        # Wait for Unity to fully boot and start pulling live data
+        await asyncio.sleep(30)
+        await browser.close()
+        return captured
+
+asyncio.run(intercept_arow())
+
+
+What this reveals: If Unity is fetching from a NASA telemetry endpoint (a JSON feed, a WebSocket, a REST API), this catches it — URL, response body, everything. That endpoint would then be directly usable without needing AROW at all. This is the single most valuable thing to try.
+
+🥈 Strategy 2: Screenshot + Targeted Crop + OCR
+Your screenshot tells us the exact pixel positions of the four data values. They’re in a fixed bottom-center HUD bar. This is reliable because Unity renders at consistent screen coordinates.
+
+from playwright.sync_api import sync_playwright
+from PIL import Image
+import pytesseract, re, io
+
+# Bounding boxes for each value in the HUD
+# (from your screenshot: 1456x816 viewport, values at bottom center)
+# Adjust these after first run
+CROPS = {
+    "met":          (545, 690, 650, 755),   # 02:02:32
+    "velocity":     (635, 690, 725, 755),   # 3,188
+    "dist_earth":   (720, 690, 810, 755),   # 127,703
+    "dist_moon":    (805, 690, 895, 755),   # 142,396
+}
+
+def ocr_arow():
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1456, "height": 816})
+        page.goto("https://www.nasa.gov/missions/artemis-ii/arow/")
+        page.wait_for_timeout(25000)  # Wait for Unity to boot + render live data
+
+        screenshot = page.screenshot()
+        img = Image.open(io.BytesIO(screenshot))
+
+        results = {}
+        for key, box in CROPS.items():
+            crop = img.crop(box)
+            # Upscale + threshold for better OCR on white-on-dark
+            crop = crop.resize((crop.width*3, crop.height*3), Image.LANCZOS)
+            text = pytesseract.image_to_string(
+                crop,
+                config='--psm 7 -c tessedit_char_whitelist=0123456789:,.'
+            ).strip()
+            results[key] = text
+            print(f"{key}: {text}")
+
+        browser.close()
+        return results
+
+# Poll every 5 minutes
+import time
+while True:
+    data = ocr_arow()
+    print(data)
+    time.sleep(300)
+
+
+Reliability: High for the four displayed values — the contrast is excellent (white digits on dark background, large font). The fixed HUD layout means coordinates won’t shift between polls.
+What you get: MET, velocity (MPH), distance from Earth (miles), distance to Moon (miles) — exactly the four numbers AROW shows, at whatever cadence you poll.
+
+🥉 Strategy 3: JavaScript Injection into Unity Context
+Unity WebGL exposes a SendMessage bridge and sometimes publishes data to window scope. Worth a quick probe:
+
+# After page loads, inject JS to probe Unity's window exports
+result = page.evaluate("""() => {
+    // Unity sometimes exposes globals
+    const keys = Object.keys(window).filter(k =>
+        k.toLowerCase().includes('unity') ||
+        k.toLowerCase().includes('orion') ||
+        k.toLowerCase().includes('telemetry') ||
+        k.toLowerCase().includes('artemis')
+    );
+    // Also check if canvas has accessible pixel data
+    const canvas = document.getElementById('unity-canvas');
+    const ctx = canvas.getContext('webgl') || canvas.getContext('webgl2');
+    return {
+        unityGlobals: keys,
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height,
+        hasWebGL: !!ctx
+    };
+}""")
+print(result)
+
+
+Upside: If Unity has published any data to window scope, this finds it cleanly — no OCR needed.Downside: NASA likely didn’t expose any public JS API. But costs nothing to check.
+
+The Key Question: What Does the Network Interception Reveal?
+Your screenshot confirms AROW is showing live telemetry (not just the ephemeris) — at 8:08 PM your time the MET was 02:02:32 which maps exactly to the real mission clock. The data has to come from a network call. The three possibilities:
+
+
+
+|Source                                                   |What it means for us                                                                      |
+|---------------------------------------------------------|------------------------------------------------------------------------------------------|
+|NASA internal endpoint (not public)                      |Interception shows us the URL but we can’t hit it from outside NASA’s network             |
+|NASA public REST/JSON endpoint                           |**Jackpot** — direct feed, no scraping needed                                             |
+|The publicly downloadable ephemeris + local interpolation|Then network interception shows nothing interesting, and our build plan is already correct|
+
+Network interception is worth running once to answer this definitively. It would take about 10 minutes to set up Playwright locally and load the page with request logging on.
+
+Practical Recommendation
+Run these two things in this order:
+	1.	Network interception first — if it reveals a NASA JSON/WebSocket endpoint, that’s a clean live data feed better than anything else.
+	2.	If nothing useful found, fall back to OCR polling — 4 values every 5 minutes, paired with our ephemeris for everything else (trajectory, ground track, burn detection, etc.)
+Either way, our ephemeris-based approach covers everything AROW doesn’t display (trajectory map, ground track, radial velocity, splashdown corridor, burn detection) — so AROW scraping is additive, not foundational.​​​​​​​​​​​​​​​​
 
 -----
 
