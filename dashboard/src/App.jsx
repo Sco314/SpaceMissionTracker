@@ -9,7 +9,6 @@ import MissionTimeline from './components/MissionTimeline.jsx';
 import CrewPanel from './components/CrewPanel.jsx';
 import DetailCards from './components/DetailCards.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
-import AROWEmbed from './components/AROWEmbed.jsx';
 import UnitToggle from './components/UnitToggle.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
 
@@ -62,8 +61,6 @@ function Dashboard() {
               </div>
               <MissionTimeline currentTime={telemetry?.epoch?.getTime()} />
             </div>
-
-            <AROWEmbed />
 
             <TrajectoryMap trajectoryPath={trajectoryPath} telemetry={telemetry} />
 
