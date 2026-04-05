@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react';
-import { Video, ExternalLink, Radio } from 'lucide-react';
+import { Video } from 'lucide-react';
 
 const STREAMS = [
-  { id: 'orion-views', label: 'Views from Orion', videoId: '6RwfNBtepa4' },
   { id: 'mission', label: 'Mission Coverage', videoId: 'm3kR2KK8TEs' },
+  { id: 'orion-views', label: 'Views from Orion', videoId: '6RwfNBtepa4' },
 ];
 
 const NASA_CHANNEL_ID = 'UCLA_DiR1FfKNvjuUpBHmylQ';
@@ -21,7 +21,6 @@ export default function LiveVideo() {
       .then(r => r.text())
       .then(xml => {
         const videos = [];
-        // Extract video IDs and titles using regex (namespace-safe)
         const idMatches = [...xml.matchAll(/<yt:videoId>([^<]+)<\/yt:videoId>/g)];
         const titleMatches = [...xml.matchAll(/<media:title>([^<]+)<\/media:title>/g)];
 
@@ -29,7 +28,6 @@ export default function LiveVideo() {
           const title = titleMatches[idx]?.[1] || '';
           if (title.toLowerCase().includes('artemis')) {
             const videoId = match[1];
-            // Skip videos already in curated streams
             if (!STREAMS.some(s => s.videoId === videoId)) {
               videos.push({ id: videoId, title });
             }
@@ -37,15 +35,15 @@ export default function LiveVideo() {
         });
         setRssVideos(videos);
       })
-      .catch(() => {}); // Silently fail if CORS proxy is down
+      .catch(() => {});
   }, []);
 
   return (
-    <div className="bg-space-800 rounded-2xl border border-border overflow-hidden">
-      <div className="px-4 py-3 flex items-center justify-between border-b border-border">
+    <div className="bg-space-800 rounded-xl border border-border overflow-hidden">
+      <div className="px-3 py-2 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-2">
-          <Video size={14} className="text-label" strokeWidth={1.5} />
-          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Live Coverage</h3>
+          <Video size={14} className="text-live" strokeWidth={1.5} />
+          <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Live Coverage</h3>
         </div>
         <div className="flex gap-1">
           {STREAMS.map((stream) => (
@@ -97,8 +95,8 @@ export default function LiveVideo() {
       </div>
 
       {rssVideos.length > 0 && (
-        <div className="px-4 py-2 border-t border-border">
-          <p className="text-[10px] text-label mb-2">More Artemis Videos</p>
+        <div className="px-3 py-2 border-t border-border">
+          <p className="text-[9px] text-label mb-1.5">More Artemis Videos</p>
           <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
             {rssVideos.map(v => (
               <button
@@ -117,21 +115,6 @@ export default function LiveVideo() {
           </div>
         </div>
       )}
-
-      <div className="px-4 py-2 flex items-center justify-between border-t border-border">
-        <div className="flex items-center gap-1.5">
-          <Radio size={12} className="text-live" />
-          <span className="text-[10px] text-label">NASA TV</span>
-        </div>
-        <a
-          href="https://www.nasa.gov/live"
-          target="_blank"
-          rel="noreferrer"
-          className="flex items-center gap-1 text-[10px] text-label hover:text-slate-300 transition-colors"
-        >
-          Open on NASA.gov <ExternalLink size={10} />
-        </a>
-      </div>
     </div>
   );
 }
