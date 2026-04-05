@@ -1,5 +1,6 @@
 import { formatMET } from '../../lib/coordinates.js';
 import { useUnits } from '../../lib/units-context.jsx';
+import { getTimeToMoon, getMissionPhase } from '../../lib/mission-data.js';
 
 function Gauge({ value, label, unit, progress }) {
   const radius = 22;
@@ -65,12 +66,32 @@ export default function TelemetryGauges({ telemetry }) {
   // Moon distance: max ~400,000 km
   const moonProgress = Math.min(1, telemetry.distMoonKm / 400000);
 
+  // Time to Moon (or since flyby)
+  const nowMs = telemetry.epoch?.getTime() || Date.now();
+  const phase = getMissionPhase(nowMs);
+  const ttMoonMs = getTimeToMoon(nowMs);
+  let moonTimeLabel = '';
+  let moonTimeValue = '';
+  if (phase === 'pre-flyby' && ttMoonMs > 0) {
+    const hrs = Math.floor(ttMoonMs / 3600000);
+    const mins = Math.floor((ttMoonMs % 3600000) / 60000);
+    moonTimeLabel = 'To Moon';
+    moonTimeValue = `${hrs}h ${String(mins).padStart(2, '0')}m`;
+  } else {
+    moonTimeLabel = 'At Moon';
+    moonTimeValue = 'Now';
+  }
+
   return (
     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10">
       <Gauge value={metCompact} label="MET" unit="D:H:M" progress={metProgress} />
       <Gauge value={spd.value} label="Speed" unit={spd.unit} progress={speedProgress} />
       <Gauge value={distEarth.value} label="Earth" unit={distEarth.unit} progress={earthProgress} />
       <Gauge value={distMoon.value} label="Moon" unit={distMoon.unit} progress={moonProgress} />
+      <div className="flex flex-col items-center">
+        <span className="text-[10px] font-bold text-cyan-400">{moonTimeValue}</span>
+        <span className="text-[7px] text-slate-500 uppercase tracking-wider">{moonTimeLabel}</span>
+      </div>
     </div>
   );
 }

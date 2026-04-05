@@ -86,7 +86,6 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
       <OrbitControls
         ref={controlsRef}
         onStart={() => { userInteracting.current = true; }}
-        onEnd={() => { userInteracting.current = false; }}
         enableDamping
         dampingFactor={0.1}
         minDistance={1}
