@@ -4,6 +4,7 @@ import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import EarthMesh from './EarthMesh.jsx';
 import MoonMesh from './MoonMesh.jsx';
+import SunMesh from './SunMesh.jsx';
 import OrionModel from './OrionModel.jsx';
 import TrajectoryLine from './TrajectoryLine.jsx';
 import { eciToScene } from './constants.js';
@@ -64,14 +65,14 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
 
   return (
     <>
-      <ambientLight intensity={0.4} />
-      <directionalLight position={[50, 30, 50]} intensity={1.0} />
+      <ambientLight intensity={0.25} />
 
       <Stars radius={200} depth={50} count={800} factor={3} fade speed={0.5} />
 
-      <EarthMesh />
-      <MoonMesh moonPosition={telemetry?.moonPosition} />
+      <SunMesh />
       <Suspense fallback={null}>
+        <EarthMesh />
+        <MoonMesh moonPosition={telemetry?.moonPosition} />
         <OrionModel
           position={telemetry?.position}
           velocity={telemetry?.velocity}
