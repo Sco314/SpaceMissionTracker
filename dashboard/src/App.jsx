@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, lazy, Suspense } from 'react';
 import { UnitsProvider } from './lib/units-context.jsx';
 import { useMissionData } from './lib/useMissionData.js';
 import { formatMET } from './lib/coordinates.js';
@@ -11,6 +11,8 @@ import DetailCards from './components/DetailCards.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
 import UnitToggle from './components/UnitToggle.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
+
+const OrbitViewer = lazy(() => import('./components/OrbitViewer/OrbitViewer.jsx'));
 
 function Dashboard() {
   const { telemetry, trajectoryPath } = useMissionData();
@@ -73,6 +75,16 @@ function Dashboard() {
 
         {activeTab === 'trajectory' && (
           <TrajectoryMap trajectoryPath={trajectoryPath} telemetry={telemetry} />
+        )}
+
+        {activeTab === '3d' && (
+          <Suspense fallback={
+            <div className="w-full rounded-2xl bg-space-800 border border-white/[0.06] flex items-center justify-center" style={{ height: 'calc(100vh - 120px)' }}>
+              <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
+            </div>
+          }>
+            <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} />
+          </Suspense>
         )}
 
         {activeTab === 'timeline' && (
