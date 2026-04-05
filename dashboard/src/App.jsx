@@ -20,26 +20,24 @@ function Dashboard() {
   return (
     <div className="min-h-screen bg-space-900">
       {/* Header */}
-      <header className="border-b border-border bg-space-800/90 backdrop-blur-sm sticky top-0 z-50">
-        <div className="max-w-[1440px] mx-auto px-4">
-          <div className="flex items-center justify-between py-2.5">
-            <div className="flex items-center gap-3">
-              <img src="/artemis-ii-patch.svg" alt="Artemis II" className="w-7 h-7 rounded-lg" />
-              <div>
-                <h1 className="text-sm font-semibold text-white tracking-wide">Artemis II</h1>
-                <p className="text-[9px] uppercase tracking-widest text-label">Mission Dashboard</p>
-              </div>
+      <header className="bg-space-800/95 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between h-9 sm:h-10">
+            <div className="flex items-center gap-2 min-w-0">
+              <img src="/artemis-ii-patch.svg" alt="" className="w-5 h-5 flex-shrink-0" />
+              <span className="text-xs font-semibold text-white truncate">Artemis II</span>
+              <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
             </div>
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2.5">
               {telemetry && (
-                <span className="text-xs font-mono text-slate-300 hidden md:block">
+                <span className="text-[9px] font-mono text-slate-400 hidden md:block">
                   MET {formatMET(telemetry.met)}
                 </span>
               )}
-              <div className="flex items-center gap-1.5">
+              <div className="flex items-center gap-1">
                 <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" />
-                <span className="text-[10px] text-live font-medium">Live</span>
+                <span className="text-[9px] text-live font-medium">Live</span>
               </div>
               <div className="hidden lg:block">
                 <UnitToggle compact />
@@ -49,15 +47,16 @@ function Dashboard() {
 
           <Navigation activeTab={activeTab} onTabChange={setActiveTab} />
         </div>
+        <div className="border-b border-border" />
       </header>
 
       {/* Main content */}
-      <main className="max-w-[1440px] mx-auto px-4 py-5 space-y-5">
+      <main className="max-w-[1440px] mx-auto px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
         {activeTab === 'overview' && (
           <>
             <TelemetryPanel telemetry={telemetry} />
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
               <div className="lg:col-span-2">
                 <LiveVideo />
               </div>

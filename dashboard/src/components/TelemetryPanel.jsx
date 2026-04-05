@@ -3,23 +3,23 @@ import { METRIC_ICONS } from '../lib/icon-map.js';
 import { useUnits } from '../lib/units-context.jsx';
 import { getMissionPhase, getTimeToMoon, getTimeToEarth, getTimeSinceFlyby } from '../lib/mission-data.js';
 
-function MetricCard({ label, value, unit, iconKey, subtitle }) {
+function MetricCell({ label, value, unit, iconKey, subtitle }) {
   const Icon = METRIC_ICONS[iconKey];
   return (
-    <div className="bg-space-800 rounded-2xl p-3 sm:p-4 border border-border">
-      <div className="flex items-center gap-1.5 mb-1.5 sm:mb-2">
-        {Icon && <Icon size={13} className="text-label" strokeWidth={1.5} />}
-        <span className="text-[10px] uppercase tracking-wider text-label font-medium">{label}</span>
+    <div className="flex items-center gap-2 px-2.5 py-1.5 sm:px-3 sm:py-2 min-w-0">
+      {Icon && <Icon size={14} className="text-label flex-shrink-0 hidden sm:block" strokeWidth={1.5} />}
+      <div className="min-w-0">
+        <p className="text-[8px] sm:text-[9px] uppercase tracking-wider text-label font-medium leading-none truncate">{label}</p>
+        <div className="flex items-baseline gap-1 mt-0.5">
+          <span className="text-sm sm:text-base font-mono font-semibold text-slate-100 leading-none">
+            {value}
+          </span>
+          {unit && <span className="text-[9px] text-label">{unit}</span>}
+        </div>
+        {subtitle && (
+          <p className="text-[8px] text-slate-500 font-mono mt-px leading-none">{subtitle}</p>
+        )}
       </div>
-      <div className="flex items-baseline gap-1.5">
-        <span className="text-lg sm:text-2xl md:text-3xl font-mono font-semibold text-slate-100">
-          {value}
-        </span>
-        {unit && <span className="text-xs text-label">{unit}</span>}
-      </div>
-      {subtitle && (
-        <p className="text-[10px] text-label font-mono mt-1">{subtitle}</p>
-      )}
     </div>
   );
 }
@@ -29,11 +29,7 @@ export default function TelemetryPanel({ telemetry }) {
 
   if (!telemetry) {
     return (
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        {[...Array(4)].map((_, i) => (
-          <div key={i} className="bg-space-800 rounded-2xl p-3 sm:p-4 border border-border animate-pulse h-[88px]" />
-        ))}
-      </div>
+      <div className="bg-space-800 rounded-xl border border-border animate-pulse h-[72px]" />
     );
   }
 
@@ -50,42 +46,46 @@ export default function TelemetryPanel({ telemetry }) {
   } else if (phase === 'flyby') {
     moonSubtitle = 'At Moon';
   } else if (phase === 'post-flyby' || phase === 'post-entry') {
-    moonSubtitle = `${formatCountdown(getTimeSinceFlyby(nowMs))} since flyby`;
+    moonSubtitle = `${formatCountdown(getTimeSinceFlyby(nowMs))} ago`;
   }
 
   let earthSubtitle = null;
   if (phase === 'post-flyby' || phase === 'post-entry') {
     const tte = getTimeToEarth(nowMs);
-    earthSubtitle = tte > 0 ? `Earth in ${formatCountdown(tte)}` : 'Arrived';
+    earthSubtitle = tte > 0 ? `Return in ${formatCountdown(tte)}` : 'Arrived';
   }
 
   return (
-    <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-      <MetricCard
-        label="Mission Elapsed Time"
-        value={formatMET(telemetry.met)}
-        iconKey="met"
-      />
-      <MetricCard
-        label="Velocity"
-        value={vel.value}
-        unit={vel.unit}
-        iconKey="velocity"
-      />
-      <MetricCard
-        label="Distance from Earth"
-        value={distEarth.value}
-        unit={distEarth.unit}
-        iconKey="distEarth"
-        subtitle={earthSubtitle}
-      />
-      <MetricCard
-        label="Distance from Moon"
-        value={distMoon.value}
-        unit={distMoon.unit}
-        iconKey="distMoon"
-        subtitle={moonSubtitle}
-      />
+    <div className="bg-space-800 rounded-xl border border-border overflow-hidden">
+      <div className="grid grid-cols-2 divide-x divide-border">
+        <MetricCell
+          label="MET"
+          value={formatMET(telemetry.met)}
+          iconKey="met"
+        />
+        <MetricCell
+          label="Velocity"
+          value={vel.value}
+          unit={vel.unit}
+          iconKey="velocity"
+        />
+      </div>
+      <div className="grid grid-cols-2 divide-x divide-border border-t border-border">
+        <MetricCell
+          label="Earth"
+          value={distEarth.value}
+          unit={distEarth.unit}
+          iconKey="distEarth"
+          subtitle={earthSubtitle}
+        />
+        <MetricCell
+          label="Moon"
+          value={distMoon.value}
+          unit={distMoon.unit}
+          iconKey="distMoon"
+          subtitle={moonSubtitle}
+        />
+      </div>
     </div>
   );
 }

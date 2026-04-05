@@ -1,108 +1,176 @@
 import { useState } from 'react';
 import { MISSION_EVENTS } from '../lib/mission-data.js';
 import { EVENT_ICONS } from '../lib/icon-map.js';
-import { ChevronDown } from 'lucide-react';
+import { formatCountdown } from '../lib/coordinates.js';
+import { ChevronDown, ChevronUp } from 'lucide-react';
+
+function formatRelativeTime(eventTime, now) {
+  const diff = eventTime - now;
+  const absDiff = Math.abs(diff);
+
+  if (absDiff < 60000) return diff > 0 ? 'in <1m' : '<1m ago';
+
+  const hours = Math.floor(absDiff / 3600000);
+  const minutes = Math.floor((absDiff % 3600000) / 60000);
+
+  if (hours >= 24) {
+    const days = Math.floor(hours / 24);
+    const remHours = hours % 24;
+    const timeStr = `${days}d ${remHours}h`;
+    return diff > 0 ? `in ${timeStr}` : `${timeStr} ago`;
+  }
+
+  const timeStr = hours > 0 ? `${hours}h ${minutes}m` : `${minutes}m`;
+  return diff > 0 ? `in ${timeStr}` : `${timeStr} ago`;
+}
 
 export default function MissionTimeline({ currentTime, expanded: alwaysExpanded = false }) {
   const now = currentTime || Date.now();
   const [expandedIdx, setExpandedIdx] = useState(null);
-  const [collapsed, setCollapsed] = useState(true);
+  const [showAll, setShowAll] = useState(false);
 
-  // Find the active event index
   const activeIdx = MISSION_EVENTS.findIndex((event, i) => {
     const isPast = event.time.getTime() <= now;
-    const isActive = isPast && (
+    return isPast && (
       i === MISSION_EVENTS.length - 1 ||
       MISSION_EVENTS[i + 1].time.getTime() > now
     );
-    return isActive;
   });
 
-  const showCollapsed = collapsed && !alwaysExpanded;
-  const eventsToShow = showCollapsed
-    ? MISSION_EVENTS.filter((_, i) => i === activeIdx)
-    : MISSION_EVENTS;
+  const shouldShowAll = alwaysExpanded || showAll;
+
+  // When collapsed in sidebar: show active + one before + one after
+  const eventsToShow = shouldShowAll
+    ? MISSION_EVENTS
+    : MISSION_EVENTS.filter((_, i) => {
+        return i >= activeIdx - 1 && i <= activeIdx + 1;
+      });
+
+  const handleItemClick = (i) => {
+    setExpandedIdx(expandedIdx === i ? null : i);
+  };
 
   return (
-    <div className="bg-space-800 rounded-2xl border border-border p-4 md:p-5">
-      <button
-        onClick={() => !alwaysExpanded && setCollapsed(c => !c)}
-        className="flex items-center gap-2 w-full mb-4"
-      >
-        <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Mission Timeline</h3>
+    <div className="bg-space-800 rounded-xl border border-border overflow-hidden">
+      {/* Header */}
+      <div className="px-3 py-2 border-b border-border flex items-center justify-between">
+        <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Timeline</h3>
         {!alwaysExpanded && (
-          <ChevronDown
-            size={12}
-            className={`text-label transition-transform ${collapsed ? '' : 'rotate-180'}`}
-          />
+          <button
+            onClick={() => setShowAll(s => !s)}
+            className="text-[9px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
+          >
+            {showAll ? 'Less' : 'All'}
+            <ChevronDown size={10} className={`transition-transform ${showAll ? 'rotate-180' : ''}`} />
+          </button>
         )}
-      </button>
-      <div className="relative">
-        {!showCollapsed && <div className="absolute left-[15px] top-3 bottom-3 w-px bg-border" />}
+      </div>
 
-        <div className="space-y-0.5">
+      {/* Timeline spine */}
+      <div className="relative px-3 py-2">
+        {/* Progress line */}
+        <div className="absolute left-[21px] top-2 bottom-2 w-px">
+          {MISSION_EVENTS.map((event, i) => {
+            if (!shouldShowAll && !eventsToShow.includes(event)) return null;
+            const isPast = event.time.getTime() <= now;
+            const isActive = i === activeIdx;
+            return (
+              <div
+                key={`line-${i}`}
+                className={`w-full ${
+                  isPast && !isActive
+                    ? 'bg-green-500/30'
+                    : isActive
+                      ? 'bg-active/40'
+                      : 'bg-border'
+                }`}
+                style={{ height: `${100 / eventsToShow.length}%` }}
+              />
+            );
+          })}
+        </div>
+
+        <div className="space-y-px">
           {eventsToShow.map((event) => {
             const i = MISSION_EVENTS.indexOf(event);
             const isPast = event.time.getTime() <= now;
             const isActive = i === activeIdx;
+            const isFuture = !isPast;
             const isExpanded = alwaysExpanded || expandedIdx === i;
             const Icon = EVENT_ICONS[event.type];
+            const relTime = formatRelativeTime(event.time.getTime(), now);
 
             return (
               <button
                 key={i}
-                onClick={() => setExpandedIdx(expandedIdx === i ? null : i)}
-                className={`w-full text-left flex items-start gap-3 px-1 py-2.5 rounded-lg transition-colors ${
-                  isActive ? 'bg-space-700/40' : 'hover:bg-space-700/20'
+                onClick={() => handleItemClick(i)}
+                className={`w-full text-left flex items-start gap-2.5 pl-0 pr-1 rounded-lg transition-all ${
+                  isActive
+                    ? 'bg-space-700/50 py-2.5 -mx-1 px-1'
+                    : 'py-1.5 hover:bg-space-700/20'
                 }`}
               >
+                {/* Node */}
                 <div className="relative z-10 mt-0.5 flex-shrink-0">
-                  <div className={`w-[30px] h-[30px] rounded-lg flex items-center justify-center ${
-                    isActive
-                      ? 'bg-active/15 text-active'
-                      : isPast
-                        ? 'bg-space-600/50 text-slate-400'
-                        : 'bg-space-700 text-label'
-                  }`}>
-                    {Icon && <Icon size={14} strokeWidth={1.5} />}
-                  </div>
+                  {isActive ? (
+                    <div className="w-[22px] h-[22px] rounded-full bg-active/20 flex items-center justify-center ring-1 ring-active/30">
+                      <div className="w-2 h-2 rounded-full bg-active animate-pulse" />
+                    </div>
+                  ) : isPast ? (
+                    <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full bg-green-500/60" />
+                    </div>
+                  ) : (
+                    <div className="w-[22px] h-[22px] rounded-full flex items-center justify-center">
+                      <div className="w-1.5 h-1.5 rounded-full border border-slate-600" />
+                    </div>
+                  )}
                 </div>
 
+                {/* Content */}
                 <div className="flex-1 min-w-0">
-                  <div className="flex items-center gap-2">
-                    <span className={`text-sm font-medium ${
-                      isActive ? 'text-slate-100' : isPast ? 'text-slate-300' : 'text-label'
+                  <div className="flex items-center gap-1.5">
+                    <span className={`text-xs font-medium leading-none ${
+                      isActive ? 'text-white' : isPast ? 'text-slate-400' : 'text-slate-500'
                     }`}>
                       {event.label}
                     </span>
+
                     {isActive && (
-                      <span className="text-[9px] uppercase tracking-wider bg-active/15 text-active px-1.5 py-0.5 rounded font-medium">
+                      <span className="text-[8px] uppercase tracking-wider bg-active/15 text-active px-1 py-px rounded font-semibold leading-none">
                         Active
                       </span>
                     )}
                     {isPast && !isActive && (
-                      <span className="text-[9px] uppercase tracking-wider bg-green-500/15 text-green-400 px-1.5 py-0.5 rounded font-medium">
-                        Successful
+                      <span className="text-[8px] uppercase tracking-wider text-green-500/70 font-medium leading-none">
+                        Done
                       </span>
                     )}
-                    <ChevronDown
-                      size={12}
-                      className={`ml-auto text-label transition-transform ${isExpanded ? 'rotate-180' : ''}`}
-                    />
+
+                    <span className={`ml-auto text-[9px] font-mono leading-none flex-shrink-0 ${
+                      isActive ? 'text-active/70' : isFuture ? 'text-slate-500' : 'text-slate-600'
+                    }`}>
+                      {relTime}
+                    </span>
                   </div>
-                  <p className={`text-xs mt-0.5 leading-relaxed ${
-                    isPast ? 'text-label' : 'text-space-500'
-                  }`}>
-                    {event.description}
-                  </p>
+
+                  {isActive && (
+                    <p className="text-[10px] text-slate-400 mt-1 leading-snug">
+                      {event.description}
+                    </p>
+                  )}
+
+                  {isExpanded && !isActive && (
+                    <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                      {event.description}
+                    </p>
+                  )}
+
                   {isExpanded && event.details && (
-                    <p className="text-xs text-label mt-2 leading-relaxed border-t border-border pt-2">
+                    <p className="text-[10px] text-slate-600 mt-1 leading-snug">
                       {event.details}
                     </p>
                   )}
-                  <p className="text-[10px] text-space-500 font-mono mt-1">
-                    {event.time.toISOString().replace('T', ' ').slice(0, 19)} UTC
-                  </p>
                 </div>
               </button>
             );
