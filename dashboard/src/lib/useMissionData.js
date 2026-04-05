@@ -4,6 +4,7 @@ import { hermiteInterpolate } from './interpolator.js';
 import { distanceFromEarth, speed, kmsToMph, kmToMiles, altitude, eciToLatLon } from './coordinates.js';
 import { LAUNCH_TIME } from './mission-data.js';
 import trajectoryRaw from '../data/trajectory_data.json';
+import moonEphemerisRaw from '../data/moon_ephemeris.json';
 
 // Pre-process the JSON data into state vectors with epochMs
 const preloadedVectors = trajectoryRaw.map(v => ({
@@ -12,20 +13,42 @@ const preloadedVectors = trajectoryRaw.map(v => ({
   epochMs: new Date(v.epoch).getTime(),
 }));
 
-// Simple Moon position approximation (average Earth-Moon distance)
-// For accuracy, this should be fetched from Horizons (ID 301)
-function approximateMoonPosition(timeMs) {
-  const MOON_ORBITAL_PERIOD = 27.321661 * 86400 * 1000; // ms
-  const MOON_DISTANCE = 384400; // km average
-  const epoch0 = new Date('2026-04-01T00:00:00Z').getTime();
-  const PHASE_OFFSET = 3.18; // Calibrated so Moon aligns with Orion flyby position
-  const angle = ((timeMs - epoch0) / MOON_ORBITAL_PERIOD) * 2 * Math.PI + PHASE_OFFSET;
-  // Moon orbit inclined ~28.7° to equatorial plane in ECI (5.14° ecliptic + 23.4° obliquity)
-  const incl = 28.7 * Math.PI / 180;
+// Pre-process Moon ephemeris (derived from trajectory dynamics)
+const moonEphemeris = moonEphemerisRaw.map(m => ({
+  ...m,
+  epochMs: new Date(m.epoch).getTime(),
+}));
+
+// Interpolate Moon position from real ephemeris data
+function getMoonPosition(timeMs) {
+  if (moonEphemeris.length === 0) return { x: 0, y: 0, z: 0 };
+
+  // Clamp to range
+  if (timeMs <= moonEphemeris[0].epochMs) {
+    const m = moonEphemeris[0];
+    return { x: m.x, y: m.y, z: m.z };
+  }
+  if (timeMs >= moonEphemeris[moonEphemeris.length - 1].epochMs) {
+    const m = moonEphemeris[moonEphemeris.length - 1];
+    return { x: m.x, y: m.y, z: m.z };
+  }
+
+  // Binary search for bracketing positions
+  let lo = 0, hi = moonEphemeris.length - 1;
+  while (hi - lo > 1) {
+    const mid = (lo + hi) >> 1;
+    if (moonEphemeris[mid].epochMs <= timeMs) lo = mid;
+    else hi = mid;
+  }
+
+  const before = moonEphemeris[lo];
+  const after = moonEphemeris[hi];
+  const t = (timeMs - before.epochMs) / (after.epochMs - before.epochMs);
+
   return {
-    x: MOON_DISTANCE * Math.cos(angle),
-    y: MOON_DISTANCE * Math.sin(angle) * Math.cos(incl),
-    z: MOON_DISTANCE * Math.sin(angle) * Math.sin(incl),
+    x: before.x + t * (after.x - before.x),
+    y: before.y + t * (after.y - before.y),
+    z: before.z + t * (after.z - before.z),
   };
 }
 
@@ -46,7 +69,7 @@ export function useMissionData() {
     for (let i = 0; i < vectors.length; i += step) {
       const v = vectors[i];
       const dist = distanceFromEarth(v);
-      const moonPos = approximateMoonPosition(v.epochMs);
+      const moonPos = getMoonPosition(v.epochMs);
       const distMoon = Math.sqrt(
         (v.x - moonPos.x) ** 2 + (v.y - moonPos.y) ** 2 + (v.z - moonPos.z) ** 2
       );
@@ -77,7 +100,7 @@ export function useMissionData() {
       if (state) {
         const vel = speed(state);
         const distEarth = distanceFromEarth(state);
-        const moonPos = approximateMoonPosition(now);
+        const moonPos = getMoonPosition(now);
         const distMoon = Math.sqrt(
           (state.x - moonPos.x) ** 2 +
           (state.y - moonPos.y) ** 2 +

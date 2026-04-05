@@ -29,13 +29,17 @@ export default function LiveVideo() {
           if (title.toLowerCase().includes('artemis')) {
             const videoId = match[1];
             if (!STREAMS.some(s => s.videoId === videoId)) {
-              videos.push({ id: videoId, title });
+              videos.push({ id: videoId, title, isLive: false });
             }
           }
         });
-        setRssVideos(videos);
+        const liveEntries = STREAMS.map(s => ({ id: s.videoId, title: s.label, isLive: true }));
+        setRssVideos([...liveEntries, ...videos]);
       })
-      .catch(() => {});
+      .catch(() => {
+        const liveEntries = STREAMS.map(s => ({ id: s.videoId, title: s.label, isLive: true }));
+        setRssVideos(liveEntries);
+      });
   }, []);
 
   return (
@@ -109,7 +113,7 @@ export default function LiveVideo() {
                   className="w-full rounded"
                   alt={v.title}
                 />
-                <p className="text-[9px] text-label mt-1 truncate">{v.title}</p>
+                <p className={`text-[9px] mt-1 truncate ${v.isLive ? 'text-live font-medium' : 'text-label'}`}>{v.isLive ? `● ${v.title}` : v.title}</p>
               </button>
             ))}
           </div>

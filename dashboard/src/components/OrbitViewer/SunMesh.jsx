@@ -10,7 +10,7 @@ export default function SunMesh() {
       {/* Directional light from Sun direction — illuminates entire scene uniformly */}
       <directionalLight
         position={SUN_POSITION}
-        intensity={1.8}
+        intensity={3.0}
         color="#fff8f0"
       />
 

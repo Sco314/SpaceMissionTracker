@@ -40,10 +40,10 @@ export default function TrajectoryLine({ path, currentTime }) {
       {futurePoints.length >= 2 && (
         <Line
           points={futurePoints}
-          color={COLORS.trajectoryFuture}
-          lineWidth={1}
+          color="#a5b4fc"
+          lineWidth={1.5}
           transparent
-          opacity={0.25}
+          opacity={0.6}
           dashed
           dashSize={0.5}
           gapSize={0.3}
