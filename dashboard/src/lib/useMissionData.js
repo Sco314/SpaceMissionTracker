@@ -18,7 +18,8 @@ function approximateMoonPosition(timeMs) {
   const MOON_ORBITAL_PERIOD = 27.321661 * 86400 * 1000; // ms
   const MOON_DISTANCE = 384400; // km average
   const epoch0 = new Date('2026-04-01T00:00:00Z').getTime();
-  const angle = ((timeMs - epoch0) / MOON_ORBITAL_PERIOD) * 2 * Math.PI;
+  const PHASE_OFFSET = 3.28; // Calibrated so Moon aligns with Orion flyby position
+  const angle = ((timeMs - epoch0) / MOON_ORBITAL_PERIOD) * 2 * Math.PI + PHASE_OFFSET;
   // Inclined ~5.14 degrees
   const incl = 5.14 * Math.PI / 180;
   return {

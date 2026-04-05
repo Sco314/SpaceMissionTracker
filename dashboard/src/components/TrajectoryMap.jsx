@@ -259,7 +259,7 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
     // Earth
     const [earthX, earthY] = toCanvas(0, 0);
     const earthScale = CANVAS_W / (viewBounds.maxX - viewBounds.minX);
-    const earthR = Math.max(EARTH_RADIUS_KM * earthScale, 10);
+    const earthR = Math.max(EARTH_RADIUS_KM * earthScale, 12);
 
     // Earth atmosphere glow
     const atmosR = earthR + 4;
@@ -280,15 +280,15 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
     ctx.fillStyle = earthGrad;
     ctx.fill();
 
-    ctx.fillStyle = '#475569';
-    ctx.font = '10px Inter, system-ui';
+    ctx.fillStyle = '#64748b';
+    ctx.font = '600 11px Inter, system-ui';
     ctx.textAlign = 'center';
-    ctx.fillText('Earth', earthX, earthY + earthR + 14);
+    ctx.fillText('Earth', earthX, earthY + earthR + 15);
 
     // Moon
     if (telemetry?.moonPosition) {
       const [moonX, moonY] = toCanvas(telemetry.moonPosition.x, telemetry.moonPosition.y);
-      const moonR = Math.max(1737 * earthScale, 7);
+      const moonR = Math.max(1737 * earthScale, 9);
       const moonGrad = ctx.createRadialGradient(moonX - 1, moonY - 1, 0, moonX, moonY, moonR);
       moonGrad.addColorStop(0, '#d1d5db');
       moonGrad.addColorStop(0.8, '#9ca3af');
@@ -310,10 +310,10 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
         ctx.fill();
       }
 
-      ctx.fillStyle = '#475569';
-      ctx.font = '10px Inter, system-ui';
+      ctx.fillStyle = '#64748b';
+      ctx.font = '600 11px Inter, system-ui';
       ctx.textAlign = 'center';
-      ctx.fillText('Moon', moonX, moonY + moonR + 14);
+      ctx.fillText('Moon', moonX, moonY + moonR + 15);
     }
 
     // Trajectory path — split past/future
@@ -330,8 +330,8 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
           const [px, py] = toCanvas(trajectoryPath[i].x, trajectoryPath[i].y);
           ctx.lineTo(px, py);
         }
-        ctx.strokeStyle = 'rgba(99, 102, 241, 0.45)';
-        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(99, 102, 241, 0.55)';
+        ctx.lineWidth = 2;
         ctx.stroke();
       }
 
@@ -357,11 +357,11 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       const [ox, oy] = toCanvas(telemetry.position.x, telemetry.position.y);
 
       // Subtle glow
-      const glowGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, 14);
-      glowGrad.addColorStop(0, 'rgba(245, 158, 11, 0.35)');
+      const glowGrad = ctx.createRadialGradient(ox, oy, 0, ox, oy, 18);
+      glowGrad.addColorStop(0, 'rgba(245, 158, 11, 0.4)');
       glowGrad.addColorStop(1, 'rgba(245, 158, 11, 0)');
       ctx.beginPath();
-      ctx.arc(ox, oy, 14, 0, Math.PI * 2);
+      ctx.arc(ox, oy, 18, 0, Math.PI * 2);
       ctx.fillStyle = glowGrad;
       ctx.fill();
 
@@ -369,7 +369,7 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       const vx = telemetry.velocity?.vx || 0;
       const vy = telemetry.velocity?.vy || 0;
       const angle = Math.atan2(-vy, vx); // negate vy due to canvas Y inversion
-      const size = 6;
+      const size = 8;
 
       ctx.save();
       ctx.translate(ox, oy);
@@ -384,10 +384,10 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       ctx.restore();
 
       // Label
-      ctx.fillStyle = '#94a3b8';
-      ctx.font = '500 10px Inter, system-ui';
-      ctx.textAlign = 'center';
-      ctx.fillText('Orion', ox, oy - 12);
+      ctx.fillStyle = '#f59e0b';
+      ctx.font = '600 11px Inter, system-ui';
+      ctx.textAlign = 'left';
+      ctx.fillText('Orion', ox + 14, oy + 4);
     }
 
     // Scale bar
