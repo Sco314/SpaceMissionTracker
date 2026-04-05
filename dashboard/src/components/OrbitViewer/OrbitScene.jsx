@@ -1,4 +1,4 @@
-import { useRef, useEffect } from 'react';
+import { useRef, useEffect, Suspense } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -57,10 +57,12 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
 
       <EarthMesh />
       <MoonMesh moonPosition={telemetry?.moonPosition} />
-      <OrionModel
-        position={telemetry?.position}
-        velocity={telemetry?.velocity}
-      />
+      <Suspense fallback={null}>
+        <OrionModel
+          position={telemetry?.position}
+          velocity={telemetry?.velocity}
+        />
+      </Suspense>
       <TrajectoryLine
         path={trajectoryPath}
         currentTime={telemetry?.epoch}
