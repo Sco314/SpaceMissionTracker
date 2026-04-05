@@ -1,0 +1,525 @@
+# Artemis II Mission Tracker — Content, Data Source & Planning Report
+
+**Purpose:** create alternative website for tracking and gathering of space missions specifically Artemis II
+**Sources Reviewed:**
+
+1.
+1. NASA AROW — `nasa.gov/missions/artemis/artemis-2/track-nasas-artemis-ii-mission-in-real-time/` (official NASA, Unity WebGL)
+1. NASA Ephemeris OEM File — `Artemis_II_OEM_2026_04_02_to_EI_v3.asc` (NASA/JSC/FOD/FDO, downloaded from NASA tracking page)
+
+-----
+web app needs desktop and mobile version 
+-----
+
+## Section 1 — AROW: Ephemeris Data vs. Real Spacecraft Telemetry
+
+**Short answer: AROW uses ACTUAL LIVE TELEMETRY from the spacecraft — not just the ephemeris.**
+
+NASA’s official description (from `nasa.gov`, March 6, 2026):
+
+> *“Using AROW, anyone with internet access can track where Orion and the crew are… AROW visualizes **data collected by sensors on Orion** and sent to the Mission Control Center at NASA’s Johnson Space Center in Houston during its flight. It will provide **constant information using this real-time data** beginning about one minute after liftoff through Orion’s atmospheric reentry.”*
+
+The ephemeris OEM file is a separate, publicly downloadable **planning/prediction product** published by the Flight Dynamics Office — useful for developers and the public, but a distinct artifact from the live telemetry stream driving AROW. NASA will also publish updated ephemeris files during the mission (the filename suffix `v3` confirms versioning is already happening).
+
+### What AROW displays (from NASA screenshots and article)
+
+|AROW Feature                                   |Notes                                    |
+|-----------------------------------------------|-----------------------------------------|
+|3D orbital visualization (Earth + Moon + Orion)|Interactive Unity 3D scene               |
+|Orion trajectory — current and projected path  |Blue path lines in 3D space              |
+|Mission elapsed time                           |Live                                     |
+|Velocity                                       |Live from telemetry                      |
+|Distance from Earth                            |Live from telemetry                      |
+|Distance to Moon                               |Live from telemetry                      |
+|Key mission milestones panel                   |Editorial + triggered by MET             |
+|Apollo landing site information on the Moon    |Static informational overlay             |
+|Augmented reality (mobile app only)            |Points phone toward Orion’s real position|
+|State vectors (published after prox ops demo)  |Downloadable data product                |
+|Ephemeris file download                        |Updated during mission, linked from page |
+
+### Can we scrape or embed AROW?
+
+|Method                                |Feasibility                                                                     |
+|--------------------------------------|--------------------------------------------------------------------------------|
+|Scrape data from AROW page            |❌ Not possible — it’s a compiled Unity WebGL binary; zero inspectable data feeds|
+|Iframe embed of AROW Unity app        |⚠️ Possible technically; NASA’s CSP headers likely block cross-origin embedding  |
+|Direct link to `nasa.gov/trackartemis`|✅ Always works; recommended as an authoritative reference                       |
+|Download ephemeris files from the page|✅ Files are publicly linked at bottom of the NASA tracking page; version-stamped|
+|State vectors when published by AROW  |✅ NASA commits to publishing these; watch the tracking page and @NASA_Orion     |
+
+-----
+
+Great screenshot — this actually tells us a lot. Let me think through all the extraction angles carefully.​​​​​​​​​​​​​​​​
+
+Good — nasa.gov is blocked at the sandbox network layer (my network restriction, not NASA’s). That’s fine — I have enough to give you a complete answer. Let me lay out all the real extraction options.
+
+How AROW Loads and Renders
+The page source tells us exactly how it works:
+
+Browser loads HTML
+  → loads WebBuildMar27.loader.js (Unity's bootstrap)
+  → loader fetches WebBuildMar27.wasm  (compiled C# game logic — binary)
+  → loader fetches WebBuildMar27.data  (Unity assets — textures, models)
+  → loader fetches WebBuildMar27.framework.js (Unity's JS runtime)
+  → createUnityInstance() boots the app inside <canvas id="unity-canvas">
+  → Unity renders frames to the canvas via WebGL
+  → ALL text numbers you see are pixels painted to the canvas — not DOM elements
+
+
+The values in your screenshot — 3,188 MPH, 127,703 MILES, 142,396 MILES — are not in the DOM at all. They’re just pixels on a <canvas>. That’s why normal scraping fails completely.
+
+Extraction Strategies (Ranked by Value)
+🥇 Strategy 1: Network Request Interception (Best option)
+The Unity binary has to get the telemetry data from somewhere — it makes HTTP/WebSocket calls just like any other browser code. Playwright can intercept every network request the page makes before it reaches the server.
+
+from playwright.async_api import async_playwright
+import asyncio, json
+
+async def intercept_arow():
+    async with async_playwright() as p:
+        browser = await p.chromium.launch()
+        page = await browser.new_page()
+
+        captured = []
+
+        # Intercept ALL network requests the Unity app makes
+        async def handle_request(request):
+            url = request.url
+            # Log anything that isn't the Unity binary assets themselves
+            if not any(x in url for x in ['.wasm', '.data', '.js', 'fonts', 'png']):
+                print(f"🔍 Interesting fetch: {url}")
+                captured.append(url)
+
+        async def handle_response(response):
+            url = response.url
+            if not any(x in url for x in ['.wasm', '.data', '.js', 'fonts', 'png']):
+                try:
+                    body = await response.text()
+                    print(f"📦 Response from {url}:\n{body[:500]}")
+                except:
+                    pass
+
+        page.on("request", handle_request)
+        page.on("response", handle_response)
+
+        await page.goto("https://www.nasa.gov/missions/artemis-ii/arow/")
+        # Wait for Unity to fully boot and start pulling live data
+        await asyncio.sleep(30)
+        await browser.close()
+        return captured
+
+asyncio.run(intercept_arow())
+
+
+What this reveals: If Unity is fetching from a NASA telemetry endpoint (a JSON feed, a WebSocket, a REST API), this catches it — URL, response body, everything. That endpoint would then be directly usable without needing AROW at all. This is the single most valuable thing to try.
+
+🥈 Strategy 2: Screenshot + Targeted Crop + OCR
+Your screenshot tells us the exact pixel positions of the four data values. They’re in a fixed bottom-center HUD bar. This is reliable because Unity renders at consistent screen coordinates.
+
+from playwright.sync_api import sync_playwright
+from PIL import Image
+import pytesseract, re, io
+
+# Bounding boxes for each value in the HUD
+# (from your screenshot: 1456x816 viewport, values at bottom center)
+# Adjust these after first run
+CROPS = {
+    "met":          (545, 690, 650, 755),   # 02:02:32
+    "velocity":     (635, 690, 725, 755),   # 3,188
+    "dist_earth":   (720, 690, 810, 755),   # 127,703
+    "dist_moon":    (805, 690, 895, 755),   # 142,396
+}
+
+def ocr_arow():
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page(viewport={"width": 1456, "height": 816})
+        page.goto("https://www.nasa.gov/missions/artemis-ii/arow/")
+        page.wait_for_timeout(25000)  # Wait for Unity to boot + render live data
+
+        screenshot = page.screenshot()
+        img = Image.open(io.BytesIO(screenshot))
+
+        results = {}
+        for key, box in CROPS.items():
+            crop = img.crop(box)
+            # Upscale + threshold for better OCR on white-on-dark
+            crop = crop.resize((crop.width*3, crop.height*3), Image.LANCZOS)
+            text = pytesseract.image_to_string(
+                crop,
+                config='--psm 7 -c tessedit_char_whitelist=0123456789:,.'
+            ).strip()
+            results[key] = text
+            print(f"{key}: {text}")
+
+        browser.close()
+        return results
+
+# Poll every 5 minutes
+import time
+while True:
+    data = ocr_arow()
+    print(data)
+    time.sleep(300)
+
+
+Reliability: High for the four displayed values — the contrast is excellent (white digits on dark background, large font). The fixed HUD layout means coordinates won’t shift between polls.
+What you get: MET, velocity (MPH), distance from Earth (miles), distance to Moon (miles) — exactly the four numbers AROW shows, at whatever cadence you poll.
+
+🥉 Strategy 3: JavaScript Injection into Unity Context
+Unity WebGL exposes a SendMessage bridge and sometimes publishes data to window scope. Worth a quick probe:
+
+# After page loads, inject JS to probe Unity's window exports
+result = page.evaluate("""() => {
+    // Unity sometimes exposes globals
+    const keys = Object.keys(window).filter(k =>
+        k.toLowerCase().includes('unity') ||
+        k.toLowerCase().includes('orion') ||
+        k.toLowerCase().includes('telemetry') ||
+        k.toLowerCase().includes('artemis')
+    );
+    // Also check if canvas has accessible pixel data
+    const canvas = document.getElementById('unity-canvas');
+    const ctx = canvas.getContext('webgl') || canvas.getContext('webgl2');
+    return {
+        unityGlobals: keys,
+        canvasWidth: canvas.width,
+        canvasHeight: canvas.height,
+        hasWebGL: !!ctx
+    };
+}""")
+print(result)
+
+
+Upside: If Unity has published any data to window scope, this finds it cleanly — no OCR needed.Downside: NASA likely didn’t expose any public JS API. But costs nothing to check.
+
+The Key Question: What Does the Network Interception Reveal?
+Your screenshot confirms AROW is showing live telemetry (not just the ephemeris) — at 8:08 PM your time the MET was 02:02:32 which maps exactly to the real mission clock. The data has to come from a network call. The three possibilities:
+
+
+
+|Source                                                   |What it means for us                                                                      |
+|---------------------------------------------------------|------------------------------------------------------------------------------------------|
+|NASA internal endpoint (not public)                      |Interception shows us the URL but we can’t hit it from outside NASA’s network             |
+|NASA public REST/JSON endpoint                           |**Jackpot** — direct feed, no scraping needed                                             |
+|The publicly downloadable ephemeris + local interpolation|Then network interception shows nothing interesting, and our build plan is already correct|
+
+Network interception is worth running once to answer this definitively. It would take about 10 minutes to set up Playwright locally and load the page with request logging on.
+
+Practical Recommendation
+Run these two things in this order:
+	1.	Network interception first — if it reveals a NASA JSON/WebSocket endpoint, that’s a clean live data feed better than anything else.
+	2.	If nothing useful found, fall back to OCR polling — 4 values every 5 minutes, paired with our ephemeris for everything else (trajectory, ground track, burn detection, etc.)
+Either way, our ephemeris-based approach covers everything AROW doesn’t display (trajectory map, ground track, radial velocity, splashdown corridor, burn detection) — so AROW scraping is additive, not foundational.​​​​​​​​​​​​​​​​
+
+-----
+
+## Section 2 — NASA Ephemeris OEM File
+
+**File:** `Artemis_II_OEM_2026_04_02_to_EI_v3.asc`  
+**Downloaded from:** NASA tracking page (publicly linked, updated during mission)
+
+|Property                           |Value                                                                       |
+|-----------------------------------|----------------------------------------------------------------------------|
+|Format                             |CCSDS OEM v2.0 — standard astrodynamics interchange format                  |
+|Originator                         |`NASA/JSC/FOD/FDO` — Flight Dynamics Office, Johnson Space Center           |
+|Object                             |`EM2` (Exploration Mission 2)                                               |
+|Created                            |2026-04-02T14:06:23 UTC                                                     |
+|Reference frame                    |EME2000 (Earth-centered inertial, J2000 epoch — non-rotating)               |
+|Time system                        |UTC                                                                         |
+|Coverage                           |2026-04-02T03:07:49 → 2026-04-10T23:53:12 UTC (~8.87 days)                  |
+|Total state vectors                |**3,212**                                                                   |
+|Cadence range                      |60 seconds (reentry) → 292 seconds (cruise); mean 238 seconds               |
+|Position units                     |km (X, Y, Z)                                                                |
+|Velocity units                     |km/s (Vx, Vy, Vz)                                                           |
+|Distance from Earth surface (range)|10,309 km → **406,775 km**                                                  |
+|Speed range                        |0.419 km/s → 6.785 km/s (1,508–24,426 km/h)                                 |
+|Max Earth distance timestamp       |2026-04-06T23:07:39 UTC                                                     |
+|Reentry endpoint                   |2026-04-10T23:53:12 UTC, 143 km altitude, lat 17.81°, lon −146.95° (Pacific)|
+
+### All values derivable from the ephemeris
+
+|Derived Value                      |Formula / Method                                                          |Notes                                            |
+|-----------------------------------|--------------------------------------------------------------------------|-------------------------------------------------|
+|Distance from Earth surface        |`sqrt(x²+y²+z²) − 6,371`                                                  |Exact                                            |
+|Spacecraft speed (km/s, km/h)      |`sqrt(vx²+vy²+vz²)` × 3,600                                               |Exact                                            |
+|Signal delay one-way               |`dist_km / 299,792.458`                                                   |Exact                                            |
+|Radial velocity                    |`dot(v, r̂)` — component moving toward/away from Earth                     |Shows whether climbing or falling                |
+|Tangential velocity                |`sqrt(speed² − radial²)` — orbital “sideways” component                   |Useful during orbit phases                       |
+|Acceleration / delta-V events      |`Δspeed / Δtime` between vectors                                          |Burn detection — cadence also tightens near burns|
+|Cumulative path distance           |Integrate `speed × Δt` across all vectors                                 |Real odometer value                              |
+|Ground track (latitude / longitude)|ECI→ECEF rotation using Greenwich Sidereal Time, then spherical coords    |Requires GST calculation                         |
+|Predicted splashdown location      |Last vector: lat **17.81°N**, lon **−146.95°** (Pacific, NW of Hawaii)    |From ephemeris endpoint                          |
+|Reentry corridor                   |Final ~90 minutes of vectors; 1-minute cadence; altitude 7,700 km → 143 km|Well-characterized                               |
+|Mission phase detection            |Large delta-V = burn; max Earth dist = apoapsis; min alt = reentry        |Better than hardcoded thresholds                 |
+|Ephemeris data freshness           |`CREATION_DATE` field in file header                                      |Show to users as “data as of…”                   |
+|Mission end time (authoritative)   |`USEABLE_STOP_TIME = 2026-04-10T23:53:12.332`                             |Use for mission progress %                       |
+|Trajectory plot (2D/3D)            |Project ECI X/Y or X/Z or rotate to ecliptic plane                        |Real path, not Bezier                            |
+|Record distance flag               |Identify vector where `dist_surface` is maximum                           |Currently 406,775 km at April 6                  |
+|Distance from Moon                 |Requires Moon ECI position added — see Section 6 note                     |⚠️ Needs JPL Horizons                             |
+
+### What the ephemeris cannot provide
+
+Hull/cabin/heatshield temperatures, G-force sensor data, crew status, communications quality, power levels, system health, oxygen levels — any spacecraft housekeeping telemetry. These exist only in the live downlink received by Mission Control.
+
+-----
+
+## Section 3 — Untrusted Source Flag: GCS Bucket `p-2-cen1`
+
+The `artemislivetracker.com` site fetches from an anonymous Google Cloud Storage bucket at `storage.googleapis.com/…/p-2-cen1/`. This is **not a NASA domain**. The path prefix `October/1/October` does not correspond to Artemis II’s April 2026 timeline — suggesting stale test data or Artemis I content. There is no verifiable provenance. **Exclude entirely from our tracker.**
+
+-----
+
+## Section 4 — Full Content Audit with Planning Recommendations
+
+**Column key:**
+
+- **Source Type:** Live = external real-time fetch | Calculated = derived math | Static = hardcoded
+- **Ephemeris Coverage:** ✅ Full accuracy | ⚠️ Partial/needs supplement | ❌ Not in file
+- **Value:** ⭐⭐⭐⭐⭐ High → ⭐ Low / misleading
+
+|Content Element                     |`artemislivetracker.com` Source         |Source Type                |Trustworthy?                      |Ephemeris Coverage             |User Value  |Our Tracker Plan                                                     |
+|------------------------------------|----------------------------------------|---------------------------|----------------------------------|-------------------------------|------------|---------------------------------------------------------------------|
+|**Spacecraft velocity**             |Physics model; GCS bucket override      |Calculated / Untrusted live|❌                                 |✅ Full                         |⭐⭐⭐⭐⭐       |**Replace** with ephemeris `sqrt(vx²+vy²+vz²)`                       |
+|**Mach number**                     |`speed / 1,235`                         |Calculated                 |⚠️ Meaningless in vacuum           |✅ Can compute (pointless)      |⭐           |**Remove** — replace with km/s                                       |
+|**Distance from Earth**             |Physics model; GCS override             |Calculated / Untrusted live|❌                                 |✅ Full                         |⭐⭐⭐⭐⭐       |**Replace** with ephemeris                                           |
+|**Distance from Moon**              |Sinusoidal approximation                |Calculated                 |⚠️ Crude                           |⚠️ Needs Moon position          |⭐⭐⭐⭐        |**Improve** with JPL Horizons                                        |
+|**Altitude above Earth**            |Same as Earth distance                  |Calculated                 |⚠️                                 |✅ Same derivation              |⭐⭐⭐         |**Derive** from ephemeris; label clearly                             |
+|**Signal delay**                    |`model_dist / c`                        |Calculated                 |⚠️ Wrong input                     |✅ Full                         |⭐⭐⭐⭐        |**Replace input** with ephemeris distance                            |
+|**Mission progress %**              |`MET / 234h × 100`                      |Calculated                 |⚠️ 234h hardcoded                  |✅ Use `USEABLE_STOP_TIME`      |⭐⭐⭐         |**Replace** denominator with ephemeris stop time                     |
+|**Mission phase name**              |20 hardcoded strings                    |Static / editorial         |⚠️ Approximate                     |⚠️ Can improve thresholds       |⭐⭐⭐⭐        |**Keep + improve** thresholds from ephemeris events                  |
+|**MET clock**                       |`Date.now() − launch_UTC`               |Calculated                 |✅                                 |❌ Not applicable               |⭐⭐⭐⭐⭐       |**Keep**                                                             |
+|**UTC clock**                       |Browser `Date()`                        |Calculated                 |✅                                 |❌                              |⭐⭐⭐         |**Keep**                                                             |
+|**Hull temp — sunlit**              |NASA spec ±121°C + noise                |Calculated                 |⚠️ Spec estimate                   |❌                              |⭐⭐          |**Keep with label** “NASA engineering spec”                          |
+|**Hull temp — shadow**              |NASA spec −157°C + noise                |Calculated                 |⚠️ Spec estimate                   |❌                              |⭐⭐          |**Keep with label**                                                  |
+|**Cabin temperature**               |20–22°C sinusoidal — invented           |Calculated                 |❌ No source                       |❌                              |⭐           |**Remove**                                                           |
+|**Heatshield temperature**          |Ramps to 1,650°C at reentry only        |Calculated                 |⚠️ Only valid at reentry           |❌                              |⭐⭐ (reentry)|**Keep for reentry window only** — hide otherwise                    |
+|**G-force**                         |Model; hardcoded ~0g coast              |Calculated                 |⚠️ Concept correct; spikes invented|❌                              |⭐⭐⭐         |**Simplify** to “~0g microgravity”; show spikes at known burn windows|
+|**Cumulative path distance**        |`dE × 1.35 + MET × 200`                 |Calculated                 |❌ Arbitrary                       |✅ Full — integrate velocity    |⭐⭐          |**Replace** with integrated ephemeris odometer                       |
+|**Trajectory map**                  |Hand-drawn 15-segment Bezier            |Calculated / decorative    |⚠️ Shape only                      |✅ Full — plot real vectors     |⭐⭐⭐⭐⭐       |**Replace** with real ephemeris plot                                 |
+|**Earth image**                     |Wikimedia Apollo 17 photo               |External CDN               |✅ Public domain                   |❌                              |⭐⭐⭐         |**Keep**                                                             |
+|**Moon image**                      |Wikimedia FullMoon2010                  |External CDN               |✅ Public domain                   |❌                              |⭐⭐⭐         |**Keep**                                                             |
+|**Orion spacecraft drawing**        |Custom canvas art                       |Static / original          |✅                                 |❌                              |⭐⭐⭐         |**Keep; convert to SVG**                                             |
+|**Mission timeline (20 milestones)**|Hardcoded event list                    |Static / editorial         |⚠️ Approximate                     |⚠️ Can calibrate                |⭐⭐⭐⭐⭐       |**Keep + calibrate** to ephemeris timestamps                         |
+|**System status panel**             |100% hardcoded NOMINAL                  |Static                     |❌ Never updates                   |❌                              |⭐           |**Remove** — most misleading element                                 |
+|**Crew cards**                      |Hardcoded: Wiseman, Glover, Koch, Hansen|Static / editorial         |✅                                 |❌                              |⭐⭐⭐⭐        |**Keep**; link to NASA bio pages                                     |
+|**Historic records panel**          |Hardcoded; unlock at MET threshold      |Static / editorial         |✅                                 |✅ Ephemeris confirms 406,775 km|⭐⭐⭐⭐⭐       |**Keep + use ephemeris** to display confirmed real distance          |
+|**NASA Live TV (YouTube)**          |YouTube IFrame embed                    |Live — official NASA       |✅                                 |❌                              |⭐⭐⭐⭐⭐       |**Keep** with auto-resume                                            |
+|**NASA AROW link/embed**            |Not included on `artemislivetracker.com`|—                          |✅ Official NASA                   |✅ Live telemetry               |⭐⭐⭐⭐⭐       |**Add** — link prominently                                           |
+|**GCS bucket `p-2-cen1`**           |Untrusted anonymous GCS fetch           |Untrusted live             |❌                                 |❌                              |⭐ None      |**Exclude entirely**                                                 |
+|**Range rings**                     |Computed circles                        |Calculated                 |✅                                 |✅ Can anchor to real distances |⭐⭐⭐         |**Keep**                                                             |
+|**Starfield / comets**              |Procedural animation                    |Decorative                 |✅                                 |❌                              |⭐⭐          |**Keep** — aesthetic                                                 |
+
+-----
+
+## Section 5 — Ephemeris Features NOT in Previous Build Plan (New Additions)
+
+All of the following are derivable from the OEM file and were not in the original build plan:
+
+### 5a — Ground Track (Lat / Lon)
+
+The ECI coordinates can be rotated to Earth-fixed (ECEF) coordinates using Greenwich Sidereal Time, then converted to geodetic latitude and longitude. This enables:
+
+- **A ground track map** showing the spacecraft’s position projected down onto Earth’s surface
+- **Sub-satellite point** (the point on Earth directly below Orion)
+- **Splashdown target location** — the final vector ends at **lat 17.81°N, lon −146.95°** (Pacific Ocean, northwest of Hawaii), a real and precise splashdown prediction from the Flight Dynamics Office
+
+```javascript
+function eciToLatLon(x, y, z, utcDate) {
+  const j2000 = new Date('2000-01-01T12:00:00Z');
+  const days = (utcDate - j2000) / 86400000;
+  const gst = ((280.46061837 + 360.98564736629 * days) % 360) * Math.PI / 180;
+  const xe = x * Math.cos(gst) + y * Math.sin(gst);
+  const ye = -x * Math.sin(gst) + y * Math.cos(gst);
+  const ze = z;
+  return {
+    lat: Math.atan2(ze, Math.sqrt(xe*xe + ye*ye)) * 180/Math.PI,
+    lon: Math.atan2(ye, xe) * 180/Math.PI
+  };
+}
+```
+
+### 5b — Radial vs. Tangential Velocity
+
+Splitting the velocity vector into its radial component (toward/away from Earth) and tangential component (orbital “sideways”) is meaningful and displayable:
+
+- **Radial velocity > 0** = moving away from Earth (climbing)
+- **Radial velocity < 0** = falling toward Earth (reentry approach, or coast phase)
+- **Tangential velocity** = the orbital component; high during orbit, falls during coast
+
+```javascript
+function radialTangential(x, y, z, vx, vy, vz) {
+  const r = Math.sqrt(x*x + y*y + z*z);
+  const radial = (x*vx + y*vy + z*vz) / r;
+  const speed = Math.sqrt(vx*vx + vy*vy + vz*vz);
+  const tangential = Math.sqrt(Math.max(0, speed*speed - radial*radial));
+  return { radial, tangential };
+}
+```
+
+### 5c — Burn / Maneuver Detection
+
+The ephemeris cadence tightens near maneuvers (60s vs. ~292s nominal). Delta-V spikes are detectable:
+
+```javascript
+const accel = Math.abs(speed[i+1] - speed[i]) / interval_s;
+if (accel > threshold) flagAsBurn(vectors[i].t);
+```
+
+Known detectable events from this file: TLI (translunar injection), trajectory correction maneuvers, any other burns in the April 2–10 window.
+
+### 5d — Data Freshness Indicator
+
+The OEM header contains `CREATION_DATE = 2026-04-02T14:06:23`. Display this to users as “Ephemeris data as of [date]” and the `USEABLE_STOP_TIME` as “Coverage through [date].” Both are parseable from the file header.
+
+### 5e — Ephemeris Version Tracking
+
+The filename already shows `v3`, meaning this is the third planning update. When a newer file is posted by NASA, it will have a newer `CREATION_DATE`. Build logic to detect version changes and prompt a re-fetch.
+
+### 5f — Authoritative Mission End Time
+
+`USEABLE_STOP_TIME = 2026-04-10T23:53:12.332` — use this as the denominator for mission progress %, replacing the hardcoded 234-hour estimate.
+
+### 5g — Predicted Splashdown Location Display
+
+Last ephemeris vector: **lat 17.81°N, lon −146.95°** at 143 km altitude. This is the Flight Dynamics Office’s predicted atmospheric entry interface point — not splashdown itself (which happens after reentry heating below the ephemeris coverage), but it pins the corridor precisely. Show on map with a marker.
+
+### 5h — Reentry Corridor Visualization
+
+The final ~90 minutes of the ephemeris have 1-minute cadence and track the spacecraft from 7,700 km altitude down to 143 km. This reentry approach can be animated or highlighted separately as a dramatic mission segment.
+
+### 5i — Real Maximum Distance Record
+
+The ephemeris confirms **406,775 km** from Earth’s surface at `2026-04-06T23:07:39 UTC`. Display this as the confirmed record value (not an editorial estimate), sourced from NASA/JSC/FOD.
+
+### 5j — Velocity in km/s
+
+Currently neither the existing site nor the previous build plan showed velocity in km/s — only km/h. For deep-space context, km/s is the standard unit used by NASA and is more intuitive at these scales (e.g., “0.6 km/s” vs “2,143 km/h”). Add both.
+
+-----
+
+## Section 6 — Updated Build Plan
+
+### Data architecture
+
+```
+[LAYER 1 — PRIMARY POSITION/VELOCITY DATA]
+NASA Ephemeris OEM file
+  Source: nasa.gov tracking page (publicly linked, updated daily)
+  Format: Plain ASCII CCSDS OEM v2.0
+  Fetch: On page load; cache; re-fetch when CREATION_DATE changes
+  Parse: 3,212 state vectors → interpolate to current UTC
+  Derive:
+    - distance_earth_km    = sqrt(x²+y²+z²) − 6,371
+    - speed_kms            = sqrt(vx²+vy²+vz²)
+    - speed_kmh            = speed_kms × 3,600
+    - signal_delay_s       = distance_earth_km / 299,792.458
+    - radial_velocity      = dot(v, r̂)
+    - tangential_velocity  = sqrt(speed² − radial²)
+    - cumulative_dist_km   = ∫ speed × Δt  (sum across all vectors)
+    - ground_track (lat/lon) = ECI→ECEF via GST rotation
+    - burn_events          = large Δspeed / Δt spikes
+    - mission_end_time     = USEABLE_STOP_TIME from header
+    - data_freshness       = CREATION_DATE from header
+
+[LAYER 2 — MOON POSITION]
+JPL Horizons API  (ssd.jpl.nasa.gov/api/horizons.api)
+  - Moon ECI state vectors at mission timestamps
+  - Used to compute distance_moon_km accurately
+  - One-time fetch or precomputed table for mission window
+  Note: Simplified sinusoidal model is NOT sufficient
+        (produces ~150,000 km error vs. expected ~9,650 km closest approach)
+
+[LAYER 3 — MAP / TRAJECTORY]
+  - Plot real ECI X/Y state vectors projected to 2D canvas
+  - Color-code by mission phase (burn, coast, lunar approach, reentry)
+  - Ground track overlay on Earth map (lat/lon from Layer 1)
+  - Splashdown target marker (final ephemeris vector)
+  - Reentry corridor highlight (final 90 min, 1-min cadence)
+  - Record distance marker at 2026-04-06T23:07:39
+
+[LAYER 4 — VIDEO]
+NASA Live TV — YouTube IFrame embed
+  - Auto-play, mute toggle, auto-resume logic (keep-alive every 10s)
+
+[LAYER 5 — OFFICIAL VISUALIZATION]
+NASA AROW  (nasa.gov/trackartemis)
+  - Prominent link; attempt iframe embed (CSP permitting)
+  - Labeled as "Official NASA live telemetry visualization"
+
+[LAYER 6 — EDITORIAL CONTENT]
+  - Crew cards: Wiseman, Glover, Koch, Hansen → link to NASA bio pages
+  - Mission timeline: 20 milestones, calibrated to ephemeris timestamps
+  - Historic records: display confirmed 406,775 km from ephemeris (not estimate)
+  - Apollo site info on Moon (static; sourced from NASA)
+  - Hull temps: labeled as "NASA engineering specification" estimates
+  - Heatshield temp: only shown during confirmed reentry window
+
+[LAYER 7 — REMOVED]
+  ✗ System status panel (fake NOMINAL)
+  ✗ Cabin temperature (invented)
+  ✗ Mach number (meaningless in vacuum)
+  ✗ GCS bucket p-2-cen1 (untrusted third party)
+  ✗ Arbitrary cumulative distance formula
+```
+
+### Display panels — recommended for our tracker
+
+|Panel                         |Data Source                     |New vs. Existing Site            |
+|------------------------------|--------------------------------|---------------------------------|
+|Velocity (km/h and km/s)      |Ephemeris                       |Improved — real data, adds km/s  |
+|Distance from Earth           |Ephemeris                       |Improved — real data             |
+|Distance from Moon            |Ephemeris + JPL Horizons        |Improved — real data             |
+|Signal delay                  |Ephemeris                       |Improved — real input            |
+|Radial velocity               |Ephemeris                       |**New**                          |
+|Tangential velocity           |Ephemeris                       |**New**                          |
+|Ground track lat/lon          |Ephemeris (ECI→ECEF)            |**New**                          |
+|Cumulative distance traveled  |Ephemeris integration           |Improved — real math             |
+|Mission progress %            |Ephemeris `USEABLE_STOP_TIME`   |Improved — authoritative end time|
+|Ephemeris data freshness      |OEM `CREATION_DATE` field       |**New**                          |
+|Ephemeris version             |Filename `v3` + creation date   |**New**                          |
+|Record distance (confirmed)   |Ephemeris max derivation        |Improved — real value            |
+|Predicted splashdown location |Final ephemeris vector          |**New**                          |
+|Reentry corridor visualization|Final 90 min of ephemeris       |**New**                          |
+|Burn/maneuver detection       |Delta-V from vector pairs       |**New**                          |
+|Real trajectory map           |Plotted ECI state vectors       |Improved — replaces Bezier       |
+|Hull temps (labeled estimate) |NASA engineering spec           |Unchanged / better labeled       |
+|Heatshield (reentry only)     |Physics model, gated            |Unchanged / better gated         |
+|G-force (simplified)          |~0g coast, spikes at burns      |Simplified / more honest         |
+|MET clock                     |Browser clock                   |Unchanged                        |
+|Crew cards                    |Editorial / NASA bio links      |Unchanged                        |
+|Mission timeline              |Editorial + ephemeris calibrated|Improved                         |
+|Historic records              |Editorial + ephemeris confirmed |Improved                         |
+|NASA AROW link                |nasa.gov                        |**New**                          |
+|NASA Live TV                  |YouTube embed                   |Unchanged                        |
+
+-----
+
+## Section 7 — Moon Distance Warning
+
+The simplified sinusoidal Moon model used in `artemislivetracker.com` produces **severe errors**. When tested against the ephemeris, the model predicted a closest Moon approach of ~150,540 km — versus the mission’s actual closest approach of ~9,650 km. That is a 140,000+ km error. **JPL Horizons is required for accurate Moon distance.** The API is free, CORS-accessible, and returns ECI state vectors for any solar system body.
+
+```
+JPL Horizons API example:
+https://ssd.jpl.nasa.gov/api/horizons.api?format=json
+  &COMMAND=301          (Moon)
+  &EPHEM_TYPE=VECTORS
+  &CENTER=500@399       (Earth center)
+  &START_TIME=2026-04-01
+  &STOP_TIME=2026-04-11
+  &STEP_SIZE=4h
+  &VEC_TABLE=2
+  &REF_FRAME=ICRF
+```
+
+-----
+
+## Appendix — External Dependency Inventory (Final)
+
+|Dependency                           |Domain                              |Trust Level        |Required?              |Plan                                             |
+|-------------------------------------|------------------------------------|-------------------|-----------------------|-------------------------------------------------|
+|NASA Ephemeris OEM                   |`nasa.gov` (JSC/FOD)                |✅ Official NASA    |**Yes — primary data** |Fetch on load; cache; re-fetch on version change |
+|JPL Horizons API                     |`ssd.jpl.nasa.gov` (JPL)            |✅ Official NASA/JPL|**Yes — Moon distance**|Fetch precomputed Moon vectors for mission window|
+|NASA AROW                            |`nasa.gov/trackartemis`             |✅ Official NASA    |No — link/embed        |Prominent link; iframe if CSP allows             |
+|NASA Live TV                         |YouTube (official NASA channel)     |✅ Official         |No — video             |Embed with IFrame API keep-alive                 |
+|Wikimedia Commons (Earth/Moon images)|`upload.wikimedia.org`              |✅ Public domain    |No                     |Keep; gradient fallback                          |                                   |
