@@ -4,6 +4,8 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { eciToScene } from './constants.js';
 
+const GLB_PATH = `${import.meta.env.BASE_URL}models/orion_components.glb`;
+
 // Component names from the GLB for highlighting
 const COMPONENT_COLORS = {
   Orion_CrewModule: new THREE.Color('#e8e8e8'),
@@ -16,7 +18,7 @@ const HIGHLIGHT_COLOR = new THREE.Color('#00ccff');
 
 export default function OrionModel({ position, velocity, highlight }) {
   const groupRef = useRef();
-  const { scene } = useGLTF('/models/orion_components.glb');
+  const { scene } = useGLTF(GLB_PATH);
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
