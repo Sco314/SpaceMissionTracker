@@ -9,10 +9,36 @@
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet" />
-    <script type="module" crossorigin src="/SpaceMissionTracker/assets/index-B4HzOZzR.js"></script>
-    <link rel="stylesheet" crossorigin href="/SpaceMissionTracker/assets/index-PMIGPUWW.css">
+    <script type="module" crossorigin src="/SpaceMissionTracker/assets/index-Ba3MyXd4.js"></script>
+    <link rel="stylesheet" crossorigin href="/SpaceMissionTracker/assets/index-CCggf2Ab.css">
   </head>
   <body>
     <div id="root"></div>
+    <div id="debug-log" style="position:fixed;bottom:0;left:0;right:0;max-height:40vh;overflow:auto;background:#000;color:#0f0;font:10px/1.4 monospace;padding:8px;z-index:99999;display:none"></div>
+    <script>
+      // Debug logger - tap 3 times on header to toggle
+      (function(){
+        var log = document.getElementById('debug-log');
+        var taps = 0, timer;
+        document.addEventListener('click', function(e){
+          if(e.clientY < 80){ taps++; clearTimeout(timer); timer = setTimeout(function(){ taps=0; }, 600);
+            if(taps >= 3){ log.style.display = log.style.display === 'none' ? 'block' : 'none'; taps=0; }
+          }
+        });
+        function addLog(type, msg){
+          var el = document.createElement('div');
+          el.style.color = type === 'error' ? '#f55' : type === 'warn' ? '#fa0' : '#0f0';
+          el.textContent = new Date().toTimeString().slice(0,8) + ' [' + type + '] ' + msg;
+          log.appendChild(el);
+          log.scrollTop = log.scrollHeight;
+        }
+        var origError = console.error, origWarn = console.warn, origLog = console.log;
+        console.error = function(){ origError.apply(console, arguments); addLog('error', Array.from(arguments).join(' ')); };
+        console.warn = function(){ origWarn.apply(console, arguments); addLog('warn', Array.from(arguments).join(' ')); };
+        console.log = function(){ origLog.apply(console, arguments); addLog('log', Array.from(arguments).join(' ')); };
+        window.addEventListener('error', function(e){ addLog('error', e.message + ' at ' + (e.filename||'') + ':' + (e.lineno||'')); });
+        window.addEventListener('unhandledrejection', function(e){ addLog('error', 'Promise: ' + (e.reason && e.reason.message || e.reason)); });
+      })();
+    </script>
   </body>
 </html>
