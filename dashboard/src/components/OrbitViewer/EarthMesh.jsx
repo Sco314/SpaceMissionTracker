@@ -1,29 +1,48 @@
 import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
-import { EARTH_RADIUS, COLORS } from './constants.js';
+import { useTexture } from '@react-three/drei';
 import * as THREE from 'three';
+import { EARTH_RADIUS, COLORS } from './constants.js';
+
+const BASE = import.meta.env.BASE_URL;
 
 export default function EarthMesh() {
+  const earthRef = useRef();
+  const cloudsRef = useRef();
   const glowRef = useRef();
 
-  // Slow rotation for visual effect
+  const [dayMap, cloudsMap] = useTexture([
+    `${BASE}textures/earth_day.jpg`,
+    `${BASE}textures/earth_clouds.png`,
+  ]);
+
+  // Slow rotation for Earth + slightly faster for clouds
   useFrame((_, delta) => {
-    if (glowRef.current) {
-      glowRef.current.rotation.y += delta * 0.05;
-    }
+    if (earthRef.current) earthRef.current.rotation.y += delta * 0.05;
+    if (cloudsRef.current) cloudsRef.current.rotation.y += delta * 0.08;
+    if (glowRef.current) glowRef.current.rotation.y += delta * 0.03;
   });
 
   return (
     <group>
-      {/* Earth sphere */}
-      <mesh>
-        <sphereGeometry args={[EARTH_RADIUS, 32, 32]} />
+      {/* Earth sphere with day texture */}
+      <mesh ref={earthRef}>
+        <sphereGeometry args={[EARTH_RADIUS, 64, 64]} />
         <meshStandardMaterial
-          color={COLORS.earth}
+          map={dayMap}
           roughness={0.8}
           metalness={0.1}
-          emissive={COLORS.earth}
-          emissiveIntensity={0.15}
+        />
+      </mesh>
+
+      {/* Cloud layer */}
+      <mesh ref={cloudsRef}>
+        <sphereGeometry args={[EARTH_RADIUS * 1.01, 64, 64]} />
+        <meshStandardMaterial
+          map={cloudsMap}
+          transparent
+          opacity={0.35}
+          depthWrite={false}
         />
       </mesh>
 

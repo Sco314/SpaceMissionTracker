@@ -56,8 +56,6 @@ function Dashboard() {
       <main className="max-w-[1440px] mx-auto px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
         {activeTab === 'overview' && (
           <>
-            <TelemetryPanel telemetry={telemetry} />
-
             <Suspense fallback={
               <div className="w-full rounded-2xl bg-space-800 border border-white/[0.06] flex items-center justify-center" style={{ height: '60vh', minHeight: '350px' }}>
                 <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
