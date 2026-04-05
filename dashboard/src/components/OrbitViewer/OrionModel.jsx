@@ -76,7 +76,7 @@ export default function OrionModel({ position, velocity, highlight }) {
   return (
     <group ref={groupRef} position={initialPos}>
       {/* Scale down: model is ~140 units wide, we want it ~1.5 scene units */}
-      <group scale={0.011} rotation={[Math.PI / 2, 0, 0]}>
+      <group scale={0.011} rotation={[0, Math.PI, 0]}>
         <primitive object={clonedScene} />
       </group>
       {/* Warm glow for visibility at distance */}

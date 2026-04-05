@@ -58,6 +58,14 @@ function Dashboard() {
           <>
             <TelemetryPanel telemetry={telemetry} />
 
+            <Suspense fallback={
+              <div className="w-full rounded-2xl bg-space-800 border border-white/[0.06] flex items-center justify-center" style={{ height: '60vh', minHeight: '350px' }}>
+                <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
+              </div>
+            }>
+              <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} compact />
+            </Suspense>
+
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
               <div className="lg:col-span-2">
                 <LiveVideo />
@@ -65,14 +73,21 @@ function Dashboard() {
               <MissionTimeline currentTime={telemetry?.epoch?.getTime()} />
             </div>
 
-            <TrajectoryMap trajectoryPath={trajectoryPath} telemetry={telemetry} />
-
             <DetailCards telemetry={telemetry} />
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               <CrewPanel />
               <SpacecraftPanel />
             </div>
+
+            <details className="bg-space-800 rounded-2xl border border-border">
+              <summary className="px-4 py-3 text-xs text-slate-400 font-medium uppercase tracking-wider cursor-pointer hover:text-slate-300 transition-colors">
+                2D Trajectory Reference
+              </summary>
+              <div className="px-4 pb-4">
+                <TrajectoryMap trajectoryPath={trajectoryPath} telemetry={telemetry} />
+              </div>
+            </details>
           </>
         )}
 

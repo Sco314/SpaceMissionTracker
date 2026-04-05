@@ -4,26 +4,19 @@ import { Orbit, Rocket } from 'lucide-react';
 import OrbitScene from './OrbitScene.jsx';
 import TelemetryGauges from './TelemetryGauges.jsx';
 
-export default function OrbitViewer({ trajectoryPath, telemetry }) {
-  const [viewMode, setViewMode] = useState('mission');
+export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
+  const [viewMode, setViewMode] = useState('spacecraft');
+
+  const heightStyle = compact
+    ? { height: '60vh', minHeight: '350px' }
+    : { height: 'calc(100vh - 120px)', minHeight: '400px' };
 
   return (
     <div className="relative w-full rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0b1120]"
-         style={{ height: 'calc(100vh - 120px)', minHeight: '400px' }}>
+         style={heightStyle}>
 
       {/* View mode buttons */}
       <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5">
-        <button
-          onClick={() => setViewMode('mission')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
-            viewMode === 'mission'
-              ? 'bg-white/10 text-white'
-              : 'bg-white/5 text-slate-400 hover:text-white'
-          }`}
-        >
-          <Orbit size={14} />
-          <span>Mission</span>
-        </button>
         <button
           onClick={() => setViewMode('spacecraft')}
           className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
@@ -34,6 +27,17 @@ export default function OrbitViewer({ trajectoryPath, telemetry }) {
         >
           <Rocket size={14} />
           <span>Spacecraft</span>
+        </button>
+        <button
+          onClick={() => setViewMode('mission')}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+            viewMode === 'mission'
+              ? 'bg-white/10 text-white'
+              : 'bg-white/5 text-slate-400 hover:text-white'
+          }`}
+        >
+          <Orbit size={14} />
+          <span>Mission</span>
         </button>
       </div>
 
