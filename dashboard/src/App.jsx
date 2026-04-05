@@ -8,6 +8,7 @@ import TrajectoryMap from './components/TrajectoryMap.jsx';
 import MissionTimeline from './components/MissionTimeline.jsx';
 import CrewPanel from './components/CrewPanel.jsx';
 import DetailCards from './components/DetailCards.jsx';
+import SpacecraftPanel from './components/SpacecraftPanel.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
 import UnitToggle from './components/UnitToggle.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
@@ -66,9 +67,11 @@ function Dashboard() {
 
             <TrajectoryMap trajectoryPath={trajectoryPath} telemetry={telemetry} />
 
+            <DetailCards telemetry={telemetry} />
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              <DetailCards telemetry={telemetry} />
               <CrewPanel />
+              <SpacecraftPanel />
             </div>
           </>
         )}
@@ -95,7 +98,10 @@ function Dashboard() {
         )}
 
         {activeTab === 'crew' && (
-          <CrewPanel />
+          <div className="space-y-5">
+            <CrewPanel />
+            <SpacecraftPanel />
+          </div>
         )}
 
         {activeTab === 'live' && (
