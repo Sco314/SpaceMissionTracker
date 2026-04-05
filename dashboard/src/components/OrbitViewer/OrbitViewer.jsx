@@ -1,8 +1,15 @@
 import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Orbit, Rocket } from 'lucide-react';
+import { Orbit, Rocket, Moon, Globe } from 'lucide-react';
 import OrbitScene from './OrbitScene.jsx';
 import TelemetryGauges from './TelemetryGauges.jsx';
+
+const VIEW_MODES = [
+  { id: 'spacecraft', label: 'Spacecraft', Icon: Rocket },
+  { id: 'mission', label: 'Mission', Icon: Orbit },
+  { id: 'moon', label: 'Moon', Icon: Moon },
+  { id: 'earth', label: 'Earth', Icon: Globe },
+];
 
 export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
   const [viewMode, setViewMode] = useState('spacecraft');
@@ -17,28 +24,20 @@ export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
 
       {/* View mode buttons */}
       <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5">
-        <button
-          onClick={() => setViewMode('spacecraft')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
-            viewMode === 'spacecraft'
-              ? 'bg-white/10 text-white'
-              : 'bg-white/5 text-slate-400 hover:text-white'
-          }`}
-        >
-          <Rocket size={14} />
-          <span>Spacecraft</span>
-        </button>
-        <button
-          onClick={() => setViewMode('mission')}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
-            viewMode === 'mission'
-              ? 'bg-white/10 text-white'
-              : 'bg-white/5 text-slate-400 hover:text-white'
-          }`}
-        >
-          <Orbit size={14} />
-          <span>Mission</span>
-        </button>
+        {VIEW_MODES.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => setViewMode(id)}
+            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
+              viewMode === id
+                ? 'bg-white/10 text-white'
+                : 'bg-white/5 text-slate-400 hover:text-white'
+            }`}
+          >
+            <Icon size={14} />
+            <span>{label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Telemetry gauges */}
@@ -52,7 +51,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
           powerPreference: 'low-power',
         }}
         dpr={[1, 1.5]}
-        camera={{ fov: 45, near: 0.1, far: 500 }}
+        camera={{ fov: 45, near: 0.1, far: 1000 }}
         style={{ touchAction: 'none' }}
       >
         <OrbitScene

@@ -2,38 +2,48 @@ import * as THREE from 'three';
 import { SUN_POSITION } from './constants.js';
 
 export default function SunMesh() {
+  // Normalize Sun direction for the directional light
+  const sunDir = new THREE.Vector3(...SUN_POSITION).normalize();
+
   return (
-    <group position={SUN_POSITION}>
-      {/* Sun sphere — self-illuminated */}
-      <mesh>
-        <sphereGeometry args={[4, 32, 32]} />
-        <meshBasicMaterial color="#fff4e0" />
-      </mesh>
+    <>
+      {/* Directional light from Sun direction — illuminates entire scene uniformly */}
+      <directionalLight
+        position={SUN_POSITION}
+        intensity={1.8}
+        color="#fff8f0"
+      />
 
-      {/* Inner glow */}
-      <mesh>
-        <sphereGeometry args={[5.5, 32, 32]} />
-        <meshBasicMaterial
-          color="#ffaa33"
-          transparent
-          opacity={0.15}
-          side={THREE.BackSide}
-        />
-      </mesh>
+      {/* Sun visual */}
+      <group position={SUN_POSITION}>
+        {/* Sun sphere — self-illuminated */}
+        <mesh>
+          <sphereGeometry args={[4, 32, 32]} />
+          <meshBasicMaterial color="#fff4e0" />
+        </mesh>
 
-      {/* Outer glow */}
-      <mesh>
-        <sphereGeometry args={[8, 32, 32]} />
-        <meshBasicMaterial
-          color="#ff8800"
-          transparent
-          opacity={0.06}
-          side={THREE.BackSide}
-        />
-      </mesh>
+        {/* Inner glow */}
+        <mesh>
+          <sphereGeometry args={[5.5, 32, 32]} />
+          <meshBasicMaterial
+            color="#ffaa33"
+            transparent
+            opacity={0.2}
+            side={THREE.BackSide}
+          />
+        </mesh>
 
-      {/* Sun light — illuminates the scene from Sun direction */}
-      <pointLight color="#fff8f0" intensity={3} distance={500} decay={1} />
-    </group>
+        {/* Outer glow */}
+        <mesh>
+          <sphereGeometry args={[9, 32, 32]} />
+          <meshBasicMaterial
+            color="#ff8800"
+            transparent
+            opacity={0.08}
+            side={THREE.BackSide}
+          />
+        </mesh>
+      </group>
+    </>
   );
 }
