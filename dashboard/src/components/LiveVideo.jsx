@@ -33,12 +33,10 @@ export default function LiveVideo() {
             }
           }
         });
-        // Prepend live streams at the front
         const liveEntries = STREAMS.map(s => ({ id: s.videoId, title: s.label, isLive: true }));
         setRssVideos([...liveEntries, ...videos]);
       })
       .catch(() => {
-        // Even if RSS fails, show the live streams
         const liveEntries = STREAMS.map(s => ({ id: s.videoId, title: s.label, isLive: true }));
         setRssVideos(liveEntries);
       });
