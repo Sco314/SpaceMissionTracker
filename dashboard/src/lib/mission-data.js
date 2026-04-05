@@ -28,7 +28,7 @@ export const MISSION_EVENTS = [
   },
   {
     type: 'lunar-flyby',
-    time: new Date('2026-04-05T12:00:00Z'),
+    time: new Date('2026-04-06T06:20:00Z'),
     label: 'Lunar Flyby',
     description: 'Closest approach to the Moon during the free-return trajectory.',
     details: 'Orion passes approximately 6,400 miles above the lunar surface on a free-return trajectory. The crew observes the far side of the Moon, farther from Earth than any humans have traveled since Apollo 17 in 1972.',
