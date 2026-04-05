@@ -96,24 +96,59 @@ export const CREW = [
     name: 'Reid Wiseman',
     role: 'Commander',
     agency: 'NASA',
+    status: 'GO',
+    photo: '/crew/wiseman.jpg',
     bio: 'U.S. Navy test pilot and NASA astronaut. Previously flew on ISS Expedition 41. Selected as Artemis II commander in April 2023.',
   },
   {
     name: 'Victor Glover',
     role: 'Pilot',
     agency: 'NASA',
+    status: 'GO',
+    photo: '/crew/glover.jpg',
     bio: 'U.S. Navy fighter pilot and NASA astronaut. Flew on SpaceX Crew-1 to the International Space Station. First person of color assigned to a lunar mission.',
   },
   {
     name: 'Christina Koch',
-    role: 'Mission Specialist',
+    role: 'Mission Specialist 1',
     agency: 'NASA',
+    status: 'GO',
+    photo: '/crew/koch.jpg',
     bio: 'Electrical engineer and NASA astronaut. Holds the record for longest single spaceflight by a woman at 328 days. First woman assigned to a lunar mission.',
   },
   {
     name: 'Jeremy Hansen',
-    role: 'Mission Specialist',
+    role: 'Mission Specialist 2',
     agency: 'CSA',
+    status: 'GO',
+    photo: '/crew/hansen.jpg',
     bio: 'Canadian Forces fighter pilot and Canadian Space Agency astronaut. First Canadian to fly beyond low Earth orbit and first non-American on a lunar mission.',
+  },
+];
+
+export const SPACECRAFT = [
+  {
+    label: 'Crew Module',
+    value: 'Orion CM-002',
+    icon: 'capsule',
+    details: '16.5 ft diameter pressurized capsule for 4 crew. Reusable heat shield rated for lunar return speeds of 25,000 mph. Designed for up to 21 days in deep space.',
+  },
+  {
+    label: 'Service Module',
+    value: 'ESM-2 (Airbus)',
+    icon: 'solar',
+    details: 'European-built service module provides propulsion, power (4 solar arrays generating 11 kW), and life support. 33 engines including 1 OMS-E main engine with 25,700 N thrust.',
+  },
+  {
+    label: 'Launch Vehicle',
+    value: 'SLS Block 1',
+    icon: 'rocket',
+    details: '322 ft tall, 8.8 million lbs thrust at liftoff. 2 five-segment solid rocket boosters + 4 RS-25 engines on the core stage. Most powerful rocket ever flown.',
+  },
+  {
+    label: 'Launch Abort System',
+    value: 'LAS Tower',
+    icon: 'shield',
+    details: 'Mounted atop the crew module during launch. 3 solid rocket motors generate 400,000 lbs thrust to pull crew to safety within milliseconds. Jettisoned after clearing the upper atmosphere.',
   },
 ];
