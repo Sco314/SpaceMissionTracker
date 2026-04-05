@@ -13,6 +13,8 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
   const { camera } = useThree();
   const targetPos = useRef(new THREE.Vector3(0, 60, 0));
   const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
+  const userInteracting = useRef(false);
+  const prevViewMode = useRef(viewMode);
 
   // Set initial camera
   useEffect(() => {
@@ -23,6 +25,18 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
   // Animate camera for view modes
   useFrame(() => {
     if (!controlsRef.current) return;
+
+    // Detect view mode switch — animate transition even if user was dragging
+    if (viewMode !== prevViewMode.current) {
+      prevViewMode.current = viewMode;
+      userInteracting.current = false;
+    }
+
+    // Let user freely orbit without camera fighting back
+    if (userInteracting.current) {
+      controlsRef.current.update();
+      return;
+    }
 
     if (viewMode === 'spacecraft' && telemetry?.position) {
       const pos = eciToScene(telemetry.position);
@@ -70,6 +84,8 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
 
       <OrbitControls
         ref={controlsRef}
+        onStart={() => { userInteracting.current = true; }}
+        onEnd={() => { userInteracting.current = false; }}
         enableDamping
         dampingFactor={0.1}
         minDistance={1}
