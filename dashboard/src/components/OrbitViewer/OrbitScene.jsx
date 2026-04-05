@@ -105,7 +105,7 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
 
   return (
     <>
-      <ambientLight intensity={0.5} />
+      <ambientLight intensity={1.2} />
 
       <Stars radius={200} depth={50} count={800} factor={3} fade speed={0.5} />
 

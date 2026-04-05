@@ -114,7 +114,7 @@ export default function TelemetryGauges({ telemetry }) {
     const hrs = Math.floor(ttFlybyMs / 3600000);
     const mins = Math.floor((ttFlybyMs % 3600000) / 60000);
     moonTimeValue = `${hrs}h ${String(mins).padStart(2, '0')}m`;
-    moonTimeLabel = 'To Moon';
+    moonTimeLabel = 'Until Flyby';
   } else {
     // After flyby — show time since
     const sinceMs = -ttFlybyMs;
