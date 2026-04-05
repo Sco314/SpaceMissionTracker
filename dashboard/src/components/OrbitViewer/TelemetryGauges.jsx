@@ -1,6 +1,6 @@
 import { formatMET } from '../../lib/coordinates.js';
 import { useUnits } from '../../lib/units-context.jsx';
-import { getTimeToMoon, getMissionPhase } from '../../lib/mission-data.js';
+import { LAUNCH_TIME, MISSION_EVENTS } from '../../lib/mission-data.js';
 
 function Gauge({ value, label, unit, progress }) {
   const radius = 22;
@@ -40,13 +40,48 @@ function Gauge({ value, label, unit, progress }) {
   );
 }
 
+function MissionProgress({ telemetry }) {
+  const launchMs = LAUNCH_TIME.getTime();
+  const flyby = MISSION_EVENTS.find(e => e.type === 'lunar-flyby');
+  const splashdown = MISSION_EVENTS.find(e => e.type === 'splashdown');
+  const flybyMs = flyby.time.getTime();
+  const splashMs = splashdown.time.getTime();
+  const nowMs = telemetry.epoch?.getTime() || Date.now();
+
+  // Progress from launch to splashdown
+  const totalDuration = splashMs - launchMs;
+  const elapsed = nowMs - launchMs;
+  const progress = Math.min(1, Math.max(0, elapsed / totalDuration));
+
+  // Moon marker position on the bar
+  const moonMarker = (flybyMs - launchMs) / totalDuration;
+
+  return (
+    <div className="w-14 flex flex-col items-center gap-0.5">
+      <div className="w-full h-1.5 bg-white/10 rounded-full relative overflow-visible">
+        {/* Progress fill */}
+        <div
+          className="absolute inset-y-0 left-0 bg-cyan-400/60 rounded-full"
+          style={{ width: `${progress * 100}%` }}
+        />
+        {/* Moon marker */}
+        <div
+          className="absolute top-1/2 -translate-y-1/2 w-1.5 h-1.5 rounded-full bg-slate-300 border border-slate-500"
+          style={{ left: `${moonMarker * 100}%`, marginLeft: '-3px' }}
+          title="Lunar flyby"
+        />
+      </div>
+      <span className="text-[6px] text-slate-500 uppercase tracking-wider">Progress</span>
+    </div>
+  );
+}
+
 export default function TelemetryGauges({ telemetry }) {
   const { formatDistance, formatSpeed } = useUnits();
 
   if (!telemetry) return null;
 
   const metStr = formatMET(telemetry.met);
-  // Extract D:HH:MM for compact display
   const metParts = metStr.split(' ');
   const metCompact = metParts.length > 1
     ? `${metParts[0].padStart(2, '0')}:${metParts[metParts.length - 1].slice(0, 5)}`
@@ -56,30 +91,37 @@ export default function TelemetryGauges({ telemetry }) {
   const distEarth = formatDistance(telemetry.distEarthKm);
   const distMoon = formatDistance(telemetry.distMoonKm);
 
-  // Progress values for gauge arcs (normalized 0-1)
-  // MET: 10-day mission
+  // Progress values for gauge arcs
   const metProgress = Math.min(1, telemetry.met / (10 * 86400 * 1000));
-  // Speed: max ~11 km/s at TLI
   const speedProgress = Math.min(1, telemetry.velocityKms / 11);
-  // Earth distance: max ~400,000 km
   const earthProgress = Math.min(1, telemetry.distEarthKm / 400000);
-  // Moon distance: max ~400,000 km
   const moonProgress = Math.min(1, telemetry.distMoonKm / 400000);
 
-  // Time to Moon (or since flyby)
+  // Time to/from Moon — use distance-based logic instead of hardcoded event time
+  // "At Moon" when within 15,000 km, otherwise show time estimate
+  const flyby = MISSION_EVENTS.find(e => e.type === 'lunar-flyby');
   const nowMs = telemetry.epoch?.getTime() || Date.now();
-  const phase = getMissionPhase(nowMs);
-  const ttMoonMs = getTimeToMoon(nowMs);
-  let moonTimeLabel = '';
+  const ttFlybyMs = flyby.time.getTime() - nowMs;
+  const atMoon = telemetry.distMoonKm < 15000;
+
   let moonTimeValue = '';
-  if (phase === 'pre-flyby' && ttMoonMs > 0) {
-    const hrs = Math.floor(ttMoonMs / 3600000);
-    const mins = Math.floor((ttMoonMs % 3600000) / 60000);
-    moonTimeLabel = 'To Moon';
-    moonTimeValue = `${hrs}h ${String(mins).padStart(2, '0')}m`;
-  } else {
-    moonTimeLabel = 'At Moon';
+  let moonTimeLabel = '';
+  if (atMoon) {
     moonTimeValue = 'Now';
+    moonTimeLabel = 'At Moon';
+  } else if (ttFlybyMs > 0) {
+    // Before flyby — show countdown
+    const hrs = Math.floor(ttFlybyMs / 3600000);
+    const mins = Math.floor((ttFlybyMs % 3600000) / 60000);
+    moonTimeValue = `${hrs}h ${String(mins).padStart(2, '0')}m`;
+    moonTimeLabel = 'To Moon';
+  } else {
+    // After flyby — show time since
+    const sinceMs = -ttFlybyMs;
+    const hrs = Math.floor(sinceMs / 3600000);
+    const mins = Math.floor((sinceMs % 3600000) / 60000);
+    moonTimeValue = `${hrs}h ${String(mins).padStart(2, '0')}m`;
+    moonTimeLabel = 'Since Flyby';
   }
 
   return (
@@ -89,9 +131,10 @@ export default function TelemetryGauges({ telemetry }) {
       <Gauge value={distEarth.value} label="Earth" unit={distEarth.unit} progress={earthProgress} />
       <Gauge value={distMoon.value} label="Moon" unit={distMoon.unit} progress={moonProgress} />
       <div className="flex flex-col items-center">
-        <span className="text-[10px] font-bold text-cyan-400">{moonTimeValue}</span>
+        <span className={`text-[10px] font-bold ${atMoon ? 'text-live' : 'text-cyan-400'}`}>{moonTimeValue}</span>
         <span className="text-[7px] text-slate-500 uppercase tracking-wider">{moonTimeLabel}</span>
       </div>
+      <MissionProgress telemetry={telemetry} />
     </div>
   );
 }

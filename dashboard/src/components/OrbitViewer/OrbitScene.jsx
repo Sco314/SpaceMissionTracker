@@ -41,18 +41,58 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
 
     if (viewMode === 'spacecraft' && telemetry?.position) {
       const pos = eciToScene(telemetry.position);
-      // Offset behind and above spacecraft
       const vel = telemetry.velocity;
       const vDir = new THREE.Vector3(vel.vx, vel.vz, -vel.vy).normalize();
       targetPos.current.set(
-        pos[0] - vDir.x * 5 + 0,
+        pos[0] - vDir.x * 5,
         pos[1] - vDir.y * 5 + 3,
         pos[2] - vDir.z * 5
       );
       targetLookAt.current.set(pos[0], pos[1], pos[2]);
-
       camera.position.lerp(targetPos.current, 0.03);
       controlsRef.current.target.lerp(targetLookAt.current, 0.03);
+
+    } else if (viewMode === 'moon' && telemetry?.moonPosition && telemetry?.position) {
+      // Camera near Moon, looking past spacecraft toward Earth
+      const moonPos = eciToScene(telemetry.moonPosition);
+      const orionPos = eciToScene(telemetry.position);
+      // Direction from Moon to Earth (origin)
+      const moonV = new THREE.Vector3(...moonPos);
+      const toEarth = new THREE.Vector3(0, 0, 0).sub(moonV).normalize();
+      // Place camera slightly behind Moon (opposite to Earth direction)
+      targetPos.current.set(
+        moonPos[0] - toEarth.x * 3,
+        moonPos[1] - toEarth.y * 3 + 1.5,
+        moonPos[2] - toEarth.z * 3
+      );
+      // Look toward the spacecraft (midground) — Earth will be in background
+      targetLookAt.current.set(
+        moonPos[0] + toEarth.x * 2,
+        moonPos[1] + toEarth.y * 2,
+        moonPos[2] + toEarth.z * 2
+      );
+      camera.position.lerp(targetPos.current, 0.03);
+      controlsRef.current.target.lerp(targetLookAt.current, 0.03);
+
+    } else if (viewMode === 'earth') {
+      // Camera near Earth, looking outward toward spacecraft/Moon
+      if (telemetry?.position) {
+        const orionPos = eciToScene(telemetry.position);
+        const toOrion = new THREE.Vector3(...orionPos).normalize();
+        // Place camera above Earth's surface, facing toward spacecraft
+        targetPos.current.set(
+          toOrion.x * 2,
+          toOrion.y * 2 + 1.5,
+          toOrion.z * 2
+        );
+        targetLookAt.current.set(orionPos[0], orionPos[1], orionPos[2]);
+      } else {
+        targetPos.current.set(2, 2, 2);
+        targetLookAt.current.set(0, 0, 0);
+      }
+      camera.position.lerp(targetPos.current, 0.03);
+      controlsRef.current.target.lerp(targetLookAt.current, 0.03);
+
     } else if (viewMode === 'mission') {
       targetPos.current.set(0, 50, 30);
       targetLookAt.current.set(0, 0, 0);
@@ -65,7 +105,7 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
 
   return (
     <>
-      <ambientLight intensity={0.25} />
+      <ambientLight intensity={0.5} />
 
       <Stars radius={200} depth={50} count={800} factor={3} fade speed={0.5} />
 
@@ -89,7 +129,7 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode }) {
         enableDamping
         dampingFactor={0.1}
         minDistance={1}
-        maxDistance={150}
+        maxDistance={300}
         enablePan={false}
       />
     </>
