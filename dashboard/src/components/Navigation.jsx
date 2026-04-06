@@ -2,10 +2,9 @@ import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, 
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: '3d', label: '3D', icon: Globe },
+  { id: 'live', label: 'Live', icon: Video },
   { id: 'timeline', label: 'Timeline', icon: Clock },
   { id: 'crew', label: 'Crew', icon: Users },
-  { id: 'live', label: 'Live', icon: Video },
   { id: 'data', label: 'Data', icon: Database },
   { id: 'trajectory', label: '2D Trajectory Map', icon: NavIcon },
 ];
