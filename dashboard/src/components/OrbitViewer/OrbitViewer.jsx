@@ -23,36 +23,37 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
     <div className="relative w-full rounded-2xl overflow-hidden border border-white/[0.06] bg-[#0b1120]"
          style={heightStyle}>
 
-      {/* View mode buttons */}
-      <div className="absolute left-2 top-2 z-10 flex flex-col gap-1.5">
-        {VIEW_MODES.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            onClick={() => { setViewMode(id); setReplaying(false); }}
-            className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
-              viewMode === id && !replaying
-                ? 'bg-white/10 text-white'
-                : 'bg-white/5 text-slate-400 hover:text-white'
-            }`}
-          >
-            <Icon size={14} />
-            <span>{label}</span>
-          </button>
-        ))}
-
+      {/* Nav buttons */}
+      <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
         {/* Replay button */}
         <button
           onClick={() => setReplaying(true)}
           disabled={replaying}
-          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all mt-1 ${
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
             replaying
               ? 'bg-amber-500/20 text-amber-300 animate-pulse'
               : 'bg-white/5 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10'
           }`}
         >
-          <Play size={14} />
+          <Play size={12} />
           <span>{replaying ? 'Replaying...' : 'Replay Launch to Now'}</span>
         </button>
+
+        {/* View mode buttons */}
+        {VIEW_MODES.map(({ id, label, Icon }) => (
+          <button
+            key={id}
+            onClick={() => { setViewMode(id); setReplaying(false); }}
+            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
+              viewMode === id && !replaying
+                ? 'bg-white/10 text-white'
+                : 'bg-white/5 text-slate-400 hover:text-white'
+            }`}
+          >
+            <Icon size={12} />
+            <span>{label}</span>
+          </button>
+        ))}
       </div>
 
       {/* Telemetry gauges */}
