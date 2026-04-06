@@ -150,9 +150,9 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
       const vel = telemetry.velocity;
       const vDir = new THREE.Vector3(vel.vx, vel.vz, -vel.vy).normalize();
       targetPos.current.set(
-        pos[0] - vDir.x * 5,
-        pos[1] - vDir.y * 5 + 3,
-        pos[2] - vDir.z * 5
+        pos[0] - vDir.x * 2.5,
+        pos[1] - vDir.y * 2.5 + 1.5,
+        pos[2] - vDir.z * 2.5
       );
       targetLookAt.current.set(pos[0], pos[1], pos[2]);
       camera.position.lerp(targetPos.current, 0.03);

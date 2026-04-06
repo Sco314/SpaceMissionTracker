@@ -1,5 +1,5 @@
 import { useRef, useMemo, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useFrame, useThree } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { eciToScene } from './constants.js';
@@ -16,9 +16,14 @@ const COMPONENT_COLORS = {
 
 const HIGHLIGHT_COLOR = new THREE.Color('#00ccff');
 
+const BASE_SCALE = 0.011;
+const REFERENCE_DIST = 30; // camera distance where base scale looks right (halfway Earth–Moon)
+
 export default function OrionModel({ position, velocity, highlight }) {
   const groupRef = useRef();
+  const innerRef = useRef();
   const { scene } = useGLTF(GLB_PATH);
+  const { camera } = useThree();
 
   const clonedScene = useMemo(() => {
     const clone = scene.clone(true);
@@ -67,6 +72,14 @@ export default function OrionModel({ position, velocity, highlight }) {
       pos[2] + velDir.z
     );
     groupRef.current.lookAt(target);
+
+    // Dynamic scale: smaller when camera is close (near Moon), larger when far away
+    if (innerRef.current) {
+      const dist = camera.position.distanceTo(groupRef.current.position);
+      const factor = Math.max(0.2, Math.min(1.5, dist / REFERENCE_DIST));
+      const s = BASE_SCALE * factor;
+      innerRef.current.scale.setScalar(s);
+    }
   });
 
   if (!position) return null;
@@ -75,8 +88,8 @@ export default function OrionModel({ position, velocity, highlight }) {
 
   return (
     <group ref={groupRef} position={initialPos}>
-      {/* Scale down: model is ~140 units wide, we want it ~1.5 scene units */}
-      <group scale={0.011} rotation={[0, Math.PI, 0]}>
+      {/* Scale adapts to camera distance — see useFrame above */}
+      <group ref={innerRef} scale={BASE_SCALE} rotation={[0, Math.PI, 0]}>
         <primitive object={clonedScene} />
       </group>
       {/* Warm glow for visibility at distance */}

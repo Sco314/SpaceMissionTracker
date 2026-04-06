@@ -368,7 +368,7 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       // Draw directional triangle using velocity vector
       const vx = telemetry.velocity?.vx || 0;
       const vy = telemetry.velocity?.vy || 0;
-      const angle = Math.atan2(-vy, vx); // negate vy due to canvas Y inversion
+      const angle = Math.atan2(vy, vx); // canvas Y is inverted in toCanvas
       const size = 8;
 
       ctx.save();

@@ -43,11 +43,19 @@ function Dashboard() {
   };
 
   // State for expandable sections
-  const [mapOpen, setMapOpen] = useState(false);
+  const [mapOpen, setMapOpen] = useState(true);
   const [timelineInView, setTimelineInView] = useState(false);
+  const [requestedViewMode, setRequestedViewMode] = useState(null);
 
   // Scroll to section when nav button clicked
   const handleNavigate = useCallback((sectionId) => {
+    // "3D Mission Trajectory Map" scrolls to 3D viewer and sets mission view
+    if (sectionId === '3d-map') {
+      setActiveSection('overview');
+      sectionRefs.overview.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setRequestedViewMode('mission');
+      return;
+    }
     setActiveSection(sectionId);
     const ref = sectionRefs[sectionId];
     if (ref?.current) {
@@ -144,7 +152,14 @@ function Dashboard() {
                 <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
               </div>
             }>
-              <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} vectors={vectors} compact />
+              <OrbitViewer
+                trajectoryPath={trajectoryPath}
+                telemetry={telemetry}
+                vectors={vectors}
+                compact
+                requestedViewMode={requestedViewMode}
+                onViewModeApplied={() => setRequestedViewMode(null)}
+              />
             </Suspense>
           </section>
 
@@ -153,26 +168,27 @@ function Dashboard() {
           </section>
         </div>
 
-        {/* Row 2: Timeline & Crew — side-by-side on desktop */}
+        {/* Row 2: Timeline & Data left, Crew & Spacecraft right */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
-          <section ref={sectionRefs.timeline} data-section="timeline">
-            <MissionTimeline currentTime={telemetry?.epoch?.getTime()} expanded={timelineExpanded} />
-          </section>
+          <div className="space-y-3 sm:space-y-5">
+            <section ref={sectionRefs.timeline} data-section="timeline">
+              <MissionTimeline currentTime={telemetry?.epoch?.getTime()} expanded={timelineExpanded} />
+            </section>
 
-          <section ref={sectionRefs.crew} data-section="crew">
-            <CrewPanel />
-          </section>
-        </div>
+            <section ref={sectionRefs.data} data-section="data">
+              <DetailCards telemetry={telemetry} />
+            </section>
+          </div>
 
-        {/* Row 3: Data & Spacecraft — side-by-side on desktop */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
-          <section ref={sectionRefs.data} data-section="data">
-            <DetailCards telemetry={telemetry} />
-          </section>
+          <div className="space-y-3 sm:space-y-5">
+            <section ref={sectionRefs.crew} data-section="crew">
+              <CrewPanel />
+            </section>
 
-          <section>
-            <SpacecraftPanel />
-          </section>
+            <section>
+              <SpacecraftPanel />
+            </section>
+          </div>
         </div>
 
         {/* Row 4: 2D Trajectory Map — full width */}
