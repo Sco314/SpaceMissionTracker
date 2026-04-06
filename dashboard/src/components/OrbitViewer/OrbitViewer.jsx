@@ -25,7 +25,7 @@ function YouTubeOverlay({ onEnd, onSkip }) {
   return (
     <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
       <iframe
-        src="https://www.youtube.com/embed/vMGuObY8_sw?autoplay=1&mute=0&controls=0&modestbranding=1&rel=0&playsinline=1&end=28"
+        src="https://www.youtube.com/embed/vMGuObY8_sw?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&end=28"
         title="Artemis II Launch"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         className="h-full aspect-[9/16] max-w-full"
