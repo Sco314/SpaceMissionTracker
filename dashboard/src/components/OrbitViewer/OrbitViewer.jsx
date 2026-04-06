@@ -106,9 +106,9 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
       {/* YouTube video overlay */}
       {showVideo && (
         <YouTubeOverlay
-          duration={6000}
+          duration={10000}
           startSec={8}
-          endSec={14}
+          endSec={18}
           onEnd={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
           onSkip={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
         />
