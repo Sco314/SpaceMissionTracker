@@ -44,9 +44,7 @@ function YouTubeOverlay({ onEnd, onSkip, duration = 5000, startSec = 8, endSec =
 
 export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compact, requestedViewMode, onViewModeApplied }) {
   const [viewMode, setViewMode] = useState('spacecraft');
-  const [replayPhase, setReplayPhase] = useState('off'); // 'off' | 'video' | '3d' | 'intro-video' | 'intro-3d'
-  const introFiredRef = useRef(false);
-
+  const [replayPhase, setReplayPhase] = useState('intro-video'); // starts with video on page load
   // Allow parent to request a view mode change (e.g. from nav)
   useEffect(() => {
     if (requestedViewMode && requestedViewMode !== viewMode) {
@@ -55,16 +53,6 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
       if (onViewModeApplied) onViewModeApplied();
     }
   }, [requestedViewMode]);
-
-  // Auto-play intro on first page load: 3s delay → 16s video → 3D replay
-  useEffect(() => {
-    if (introFiredRef.current) return;
-    introFiredRef.current = true;
-    const timer = setTimeout(() => {
-      setReplayPhase('intro-video');
-    }, 3000);
-    return () => clearTimeout(timer);
-  }, []);
 
   const heightStyle = compact
     ? { height: '60vh', minHeight: '350px' }
@@ -118,9 +106,9 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
       {/* YouTube video overlay */}
       {showVideo && (
         <YouTubeOverlay
-          duration={5000}
+          duration={6000}
           startSec={8}
-          endSec={13}
+          endSec={14}
           onEnd={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
           onSkip={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
         />
