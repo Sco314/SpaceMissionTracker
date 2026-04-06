@@ -51,7 +51,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
           }`}
         >
           <Play size={14} />
-          <span>{replaying ? 'Replaying...' : 'Replay'}</span>
+          <span>{replaying ? 'Replaying...' : 'Replay Launch to Now'}</span>
         </button>
       </div>
 
@@ -73,6 +73,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
           trajectoryPath={trajectoryPath}
           telemetry={telemetry}
           viewMode={viewMode}
+          setViewMode={setViewMode}
           replaying={replaying}
           setReplaying={setReplaying}
           vectors={vectors}

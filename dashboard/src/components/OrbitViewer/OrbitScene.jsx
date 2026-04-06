@@ -9,12 +9,18 @@ import SunMesh from './SunMesh.jsx';
 import OrionModel from './OrionModel.jsx';
 import TrajectoryLine from './TrajectoryLine.jsx';
 import { eciToScene } from './constants.js';
-import { LAUNCH_TIME } from '../../lib/mission-data.js';
+import { LAUNCH_TIME, MISSION_EVENTS } from '../../lib/mission-data.js';
 import { getMoonPosition } from '../../lib/useMissionData.js';
 import { hermiteInterpolate } from '../../lib/interpolator.js';
 import { distanceFromEarth, speed } from '../../lib/coordinates.js';
 
-export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replaying, setReplaying, vectors }) {
+// Pre-compute mission view center: midpoint between Earth and Moon at flyby
+const flybyEvent = MISSION_EVENTS.find(e => e.type === 'lunar-flyby');
+const flybyMoonEci = getMoonPosition(flybyEvent.time.getTime());
+const flybyMoonScene = eciToScene(flybyMoonEci);
+const missionCenter = [flybyMoonScene[0] * 0.5, flybyMoonScene[1] * 0.5, flybyMoonScene[2] * 0.5];
+
+export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, setReplaying, vectors }) {
   const controlsRef = useRef();
   const { camera } = useThree();
   const targetPos = useRef(new THREE.Vector3(0, 60, 0));
@@ -55,9 +61,10 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replay
       replayTimeRef.current += delta * 1000 * REPLAY_SPEED;
       const replayTime = replayTimeRef.current;
 
-      // End replay when we reach current time
+      // End replay when we reach current time — switch to spacecraft view
       if (replayTime >= now) {
         setReplaying(false);
+        setViewMode('spacecraft');
         replayTelemetryRef.current = null;
         return;
       }
@@ -101,8 +108,8 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replay
           controlsRef.current.target.lerp(targetLookAt.current, 0.08);
         } else if (progress < 0.8) {
           // Phase 2: Pull out to mission overview
-          targetPos.current.set(0, 50, 30);
-          targetLookAt.current.set(pos[0] * 0.3, pos[1] * 0.3, pos[2] * 0.3);
+          targetPos.current.set(missionCenter[0], missionCenter[1] + 55, missionCenter[2] + 25);
+          targetLookAt.current.set(missionCenter[0], missionCenter[1], missionCenter[2]);
           camera.position.lerp(targetPos.current, 0.04);
           controlsRef.current.target.lerp(targetLookAt.current, 0.04);
         } else {
@@ -188,8 +195,8 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replay
       controlsRef.current.target.lerp(targetLookAt.current, 0.03);
 
     } else if (viewMode === 'mission') {
-      targetPos.current.set(0, 50, 30);
-      targetLookAt.current.set(0, 0, 0);
+      targetPos.current.set(missionCenter[0], missionCenter[1] + 55, missionCenter[2] + 25);
+      targetLookAt.current.set(missionCenter[0], missionCenter[1], missionCenter[2]);
       camera.position.lerp(targetPos.current, 0.03);
       controlsRef.current.target.lerp(targetLookAt.current, 0.03);
     }

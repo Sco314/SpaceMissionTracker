@@ -58,16 +58,26 @@ export function useMissionData() {
   const vectorsRef = useRef(preloadedVectors);
   const animFrameRef = useRef(null);
 
-  // Build the trajectory path (downsampled for rendering)
+  // Build the trajectory path (adaptively downsampled for rendering)
   useEffect(() => {
     const vectors = vectorsRef.current;
     if (vectors.length === 0) return;
 
-    // Sample every ~20 vectors for the path (~160 points)
-    const step = Math.max(1, Math.floor(vectors.length / 160));
+    // Add a synthetic launch point at Earth's surface
+    const first = vectors[0];
+    const firstDir = Math.sqrt(first.x ** 2 + first.y ** 2 + first.z ** 2);
+    const launchPoint = {
+      epoch: LAUNCH_TIME,
+      epochMs: LAUNCH_TIME.getTime(),
+      x: first.x / firstDir * 6371,
+      y: first.y / firstDir * 6371,
+      z: first.z / firstDir * 6371,
+      vx: first.vx, vy: first.vy, vz: first.vz,
+    };
+
+    // Adaptive sampling: denser near Earth, sparser in deep space
     const path = [];
-    for (let i = 0; i < vectors.length; i += step) {
-      const v = vectors[i];
+    const addPoint = (v) => {
       const dist = distanceFromEarth(v);
       const moonPos = getMoonPosition(v.epochMs);
       const distMoon = Math.sqrt(
@@ -76,14 +86,34 @@ export function useMissionData() {
       path.push({
         epoch: v.epoch,
         epochMs: v.epochMs,
-        x: v.x,
-        y: v.y,
-        z: v.z,
+        x: v.x, y: v.y, z: v.z,
         distEarth: dist,
         distMoon: distMoon,
         speed: speed(v),
       });
+    };
+
+    // Start with launch point
+    addPoint(launchPoint);
+
+    // Adaptive step: small step when close to Earth, larger when far
+    let i = 0;
+    while (i < vectors.length) {
+      const v = vectors[i];
+      const dist = Math.sqrt(v.x ** 2 + v.y ** 2 + v.z ** 2);
+      let step;
+      if (dist < 15000) step = 2;       // Very dense near Earth
+      else if (dist < 50000) step = 5;   // Medium density in near space
+      else step = 20;                     // Sparse in deep space
+      addPoint(v);
+      i += step;
     }
+
+    // Always include the last point
+    if (i - vectors.length !== 0) {
+      addPoint(vectors[vectors.length - 1]);
+    }
+
     setTrajectoryPath(path);
   }, []);
 
