@@ -4,20 +4,15 @@ import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
 import EarthMesh from './EarthMesh.jsx';
 import MoonMesh from './MoonMesh.jsx';
+import MoonTrail from './MoonTrail.jsx';
 import SunMesh from './SunMesh.jsx';
 import OrionModel from './OrionModel.jsx';
 import TrajectoryLine from './TrajectoryLine.jsx';
-import { eciToScene, MOON_RADIUS } from './constants.js';
-import { LAUNCH_TIME, MISSION_EVENTS } from '../../lib/mission-data.js';
+import { eciToScene } from './constants.js';
+import { LAUNCH_TIME } from '../../lib/mission-data.js';
 import { getMoonPosition } from '../../lib/useMissionData.js';
 import { hermiteInterpolate } from '../../lib/interpolator.js';
 import { distanceFromEarth, speed } from '../../lib/coordinates.js';
-
-// Pre-compute flyby marker position
-const flybyEvent = MISSION_EVENTS.find(e => e.type === 'lunar-flyby');
-const flybyTimeMs = flybyEvent.time.getTime();
-const flybyMoonEci = getMoonPosition(flybyTimeMs);
-const flybyMarkerPos = eciToScene(flybyMoonEci);
 
 export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replaying, setReplaying, vectors }) {
   const controlsRef = useRef();
@@ -176,15 +171,17 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replay
     } else if (viewMode === 'earth') {
       if (telemetry?.position) {
         const orionPos = eciToScene(telemetry.position);
+        // Camera behind Earth (opposite side from spacecraft), looking past Earth toward Orion
         const toOrion = new THREE.Vector3(...orionPos).normalize();
         targetPos.current.set(
-          toOrion.x * 2,
-          toOrion.y * 2 + 1.5,
-          toOrion.z * 2
+          -toOrion.x * 3,
+          -toOrion.y * 3 + 1,
+          -toOrion.z * 3
         );
-        targetLookAt.current.set(orionPos[0], orionPos[1], orionPos[2]);
+        // Look at Earth center — Earth will be in foreground, spacecraft trajectory beyond
+        targetLookAt.current.set(0, 0, 0);
       } else {
-        targetPos.current.set(2, 2, 2);
+        targetPos.current.set(3, 2, 3);
         targetLookAt.current.set(0, 0, 0);
       }
       camera.position.lerp(targetPos.current, 0.03);
@@ -205,7 +202,7 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replay
 
   return (
     <>
-      <ambientLight intensity={1.2} />
+      <ambientLight intensity={1.5} />
 
       <Stars radius={200} depth={50} count={800} factor={3} fade speed={0.5} />
 
@@ -223,15 +220,8 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, replay
         currentTime={activeTelemetry?.epoch}
       />
 
-      {/* Moon flyby position marker — yellow sphere showing where Moon will be at flyby */}
-      <mesh position={flybyMarkerPos}>
-        <sphereGeometry args={[MOON_RADIUS * 1.3, 24, 24]} />
-        <meshBasicMaterial color="#fbbf24" transparent opacity={0.35} />
-      </mesh>
-      <mesh position={flybyMarkerPos}>
-        <sphereGeometry args={[MOON_RADIUS * 1.8, 16, 16]} />
-        <meshBasicMaterial color="#fbbf24" transparent opacity={0.12} side={THREE.BackSide} />
-      </mesh>
+      {/* Moon orbital trail from ephemeris data */}
+      <MoonTrail currentTime={activeTelemetry?.epoch} />
 
       <OrbitControls
         ref={controlsRef}
