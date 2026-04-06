@@ -25,13 +25,16 @@ export default function EarthMesh() {
 
   return (
     <group>
-      {/* Earth sphere with day texture */}
+      {/* Earth sphere with day texture — brightened */}
       <mesh ref={earthRef}>
         <sphereGeometry args={[EARTH_RADIUS, 64, 64]} />
         <meshStandardMaterial
           map={dayMap}
-          roughness={0.8}
-          metalness={0.1}
+          roughness={0.6}
+          metalness={0.05}
+          emissiveMap={dayMap}
+          emissive="#ffffff"
+          emissiveIntensity={0.15}
         />
       </mesh>
 
@@ -41,7 +44,7 @@ export default function EarthMesh() {
         <meshStandardMaterial
           map={cloudsMap}
           transparent
-          opacity={0.35}
+          opacity={0.45}
           depthWrite={false}
         />
       </mesh>
@@ -52,7 +55,7 @@ export default function EarthMesh() {
         <meshBasicMaterial
           color={COLORS.earthGlow}
           transparent
-          opacity={0.08}
+          opacity={0.15}
           side={THREE.BackSide}
         />
       </mesh>
