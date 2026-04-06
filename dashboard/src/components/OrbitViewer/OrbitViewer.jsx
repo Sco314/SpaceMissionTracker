@@ -11,7 +11,7 @@ const VIEW_MODES = [
   { id: 'earth', label: 'Earth', Icon: Globe },
 ];
 
-function YouTubeOverlay({ onEnd, onSkip, duration = 28000, endSec = 28 }) {
+function YouTubeOverlay({ onEnd, onSkip, duration = 5000, startSec = 8, endSec = 13 }) {
   const timerRef = useRef(null);
 
   const handleLoad = () => {
@@ -25,7 +25,7 @@ function YouTubeOverlay({ onEnd, onSkip, duration = 28000, endSec = 28 }) {
   return (
     <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
       <iframe
-        src={`https://www.youtube.com/embed/vMGuObY8_sw?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&end=${endSec}`}
+        src={`https://www.youtube.com/embed/vMGuObY8_sw?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&start=${startSec}&end=${endSec}`}
         title="Artemis II Launch"
         allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
         className="h-full aspect-[9/16] max-w-full"
@@ -118,8 +118,9 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
       {/* YouTube video overlay */}
       {showVideo && (
         <YouTubeOverlay
-          duration={replayPhase === 'intro-video' ? 16000 : 28000}
-          endSec={replayPhase === 'intro-video' ? 16 : 28}
+          duration={5000}
+          startSec={8}
+          endSec={13}
           onEnd={() => setReplayPhase(replayPhase === 'intro-video' ? 'intro-3d' : '3d')}
           onSkip={() => setReplayPhase(replayPhase === 'intro-video' ? 'intro-3d' : '3d')}
         />
