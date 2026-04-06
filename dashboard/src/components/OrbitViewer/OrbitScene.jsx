@@ -1,4 +1,4 @@
-import { useRef, useEffect, useMemo, Suspense } from 'react';
+import { useRef, useEffect, Suspense } from 'react';
 import { useThree, useFrame } from '@react-three/fiber';
 import { OrbitControls, Stars } from '@react-three/drei';
 import * as THREE from 'three';
@@ -23,10 +23,11 @@ const flybyMoonEci = getMoonPosition(flybyEvent.time.getTime());
 const flybyMoonScene = eciToScene(flybyMoonEci);
 const missionCenter = [flybyMoonScene[0] * 0.5, flybyMoonScene[1] * 0.5, flybyMoonScene[2] * 0.5];
 
-// Replay timing: 3 seconds in Earth view, then transition to Mission
-const EARTH_HOLD = 0.2; // 3s / 15s = 20% of progress
+// North Pole camera: above Earth looking down, slight Z offset to avoid gimbal lock
+const NORTH_POLE_POS = new THREE.Vector3(0, 3, 0.01);
+const NORTH_POLE_LOOKAT = new THREE.Vector3(0, 0, 0);
 
-export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, setReplaying, vectors }) {
+export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, preReplay, setReplaying, vectors }) {
   const controlsRef = useRef();
   const { camera } = useThree();
   const targetPos = useRef(new THREE.Vector3(0, 60, 0));
@@ -38,22 +39,6 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
   const replayTimeRef = useRef(0);
   const replayTelemetryRef = useRef(null);
   const replayStartedRef = useRef(false);
-
-  // Pre-compute initial Earth-view camera position for replay start
-  const replayStartCam = useMemo(() => {
-    if (!vectors || vectors.length === 0) return null;
-    const first = vectors[0];
-    const firstDist = Math.sqrt(first.x ** 2 + first.y ** 2 + first.z ** 2);
-    // Synthetic launch point at Earth's surface
-    const launchPos = eciToScene({
-      x: first.x / firstDist * 6371,
-      y: first.y / firstDist * 6371,
-      z: first.z / firstDist * 6371,
-    });
-    // Earth-view camera: behind Earth, opposite side from spacecraft
-    const toOrion = new THREE.Vector3(...launchPos).normalize();
-    return new THREE.Vector3(-toOrion.x * 3, -toOrion.y * 3 + 1, -toOrion.z * 3);
-  }, [vectors]);
 
   // Set initial camera
   useEffect(() => {
@@ -67,19 +52,27 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
       replayTimeRef.current = LAUNCH_TIME.getTime();
       replayStartedRef.current = true;
       userInteracting.current = false;
-      // Teleport camera to Earth-view position to avoid lurch from wherever it was
-      if (replayStartCam) {
-        camera.position.copy(replayStartCam);
-        if (controlsRef.current) {
-          controlsRef.current.target.set(0, 0, 0);
-        }
+      // Ensure camera is at North Pole (should already be from preReplay phase)
+      camera.position.copy(NORTH_POLE_POS);
+      if (controlsRef.current) {
+        controlsRef.current.target.copy(NORTH_POLE_LOOKAT);
       }
     }
-  }, [replaying, replayStartCam, camera]);
+  }, [replaying, camera]);
 
   // Animate camera for view modes
   useFrame((_, delta) => {
     if (!controlsRef.current) return;
+
+    // --- PRE-REPLAY: position camera at North Pole while video overlay is showing ---
+    if (preReplay) {
+      targetPos.current.copy(NORTH_POLE_POS);
+      targetLookAt.current.copy(NORTH_POLE_LOOKAT);
+      camera.position.lerp(targetPos.current, 0.1);
+      controlsRef.current.target.lerp(targetLookAt.current, 0.1);
+      controlsRef.current.update();
+      return;
+    }
 
     // --- REPLAY MODE ---
     if (replaying && vectors && vectors.length > 0) {
@@ -119,53 +112,33 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
         };
       }
 
-      // Camera choreography: Earth view → eased transition → Mission view
+      // Camera: North Pole → eased transition → Mission view
       if (state) {
         const pos = eciToScene(state);
-
-        // Earth-view camera: behind Earth, opposite side from spacecraft
-        const toOrion = new THREE.Vector3(...pos).normalize();
-        const earthCamPos = new THREE.Vector3(-toOrion.x * 3, -toOrion.y * 3 + 1, -toOrion.z * 3);
-        const earthCamLookAt = new THREE.Vector3(0, 0, 0);
-
-        // Mission-view camera
         const missionCamPos = new THREE.Vector3(missionCenter[0], missionCenter[1] + 55, missionCenter[2] + 25);
         const missionCamLookAt = new THREE.Vector3(missionCenter[0], missionCenter[1], missionCenter[2]);
 
-        if (progress < EARTH_HOLD) {
-          // Phase 1: Hold in Earth view while spacecraft starts moving
-          targetPos.current.copy(earthCamPos);
-          targetLookAt.current.copy(earthCamLookAt);
-          camera.position.lerp(targetPos.current, 0.03);
-          controlsRef.current.target.lerp(targetLookAt.current, 0.03);
+        // Transition from North Pole up to Mission over first 30% (~4.5 seconds)
+        const TRANSITION_END = 0.3;
+        const t = Math.min(progress / TRANSITION_END, 1.0);
+        const et = easeInOut(t);
 
-        } else {
-          // Phase 2: Eased transition from Earth → Mission
-          // Same smooth feel as Mission → Earth, using easeInOut for controlled
-          // acceleration/deceleration instead of raw lerp jumping toward a distant target
-          const t = (progress - EARTH_HOLD) / (1.0 - EARTH_HOLD);
-          const et = easeInOut(Math.min(t / 0.85, 1.0)); // arrive at Mission by 85%, hold for remainder
+        targetPos.current.copy(NORTH_POLE_POS).lerp(missionCamPos, et);
+        targetLookAt.current.copy(NORTH_POLE_LOOKAT).lerp(missionCamLookAt, et);
 
-          targetPos.current.copy(earthCamPos).lerp(missionCamPos, et);
-          targetLookAt.current.copy(earthCamLookAt).lerp(missionCamLookAt, et);
-
-          // Blend toward spacecraft follow in last 10% for smooth handoff to normal mode
-          if (t > 0.9) {
-            const blendOut = (t - 0.9) / 0.1;
-            const vD = new THREE.Vector3(state.vx, state.vz, -state.vy).normalize();
-            const followPos = new THREE.Vector3(
-              pos[0] - vD.x * 2.5,
-              pos[1] - vD.y * 2.5 + 1.5,
-              pos[2] - vD.z * 2.5
-            );
-            const followLookAt = new THREE.Vector3(pos[0], pos[1], pos[2]);
-            targetPos.current.lerp(followPos, blendOut);
-            targetLookAt.current.lerp(followLookAt, blendOut);
-          }
-
-          camera.position.lerp(targetPos.current, 0.03);
-          controlsRef.current.target.lerp(targetLookAt.current, 0.03);
+        // Blend toward spacecraft follow in last 10% for smooth handoff
+        if (progress > 0.9) {
+          const blendOut = (progress - 0.9) / 0.1;
+          const vD = new THREE.Vector3(state.vx, state.vz, -state.vy).normalize();
+          const followPos = new THREE.Vector3(
+            pos[0] - vD.x * 2.5, pos[1] - vD.y * 2.5 + 1.5, pos[2] - vD.z * 2.5
+          );
+          targetPos.current.lerp(followPos, blendOut);
+          targetLookAt.current.lerp(new THREE.Vector3(pos[0], pos[1], pos[2]), blendOut);
         }
+
+        camera.position.lerp(targetPos.current, 0.03);
+        controlsRef.current.target.lerp(targetLookAt.current, 0.03);
       }
 
       controlsRef.current.update();
