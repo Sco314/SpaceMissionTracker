@@ -42,10 +42,19 @@ function YouTubeOverlay({ onEnd, onSkip, duration = 28000, endSec = 28 }) {
   );
 }
 
-export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compact }) {
+export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compact, requestedViewMode, onViewModeApplied }) {
   const [viewMode, setViewMode] = useState('spacecraft');
   const [replayPhase, setReplayPhase] = useState('off'); // 'off' | 'video' | '3d' | 'intro-video' | 'intro-3d'
   const introFiredRef = useRef(false);
+
+  // Allow parent to request a view mode change (e.g. from nav)
+  useEffect(() => {
+    if (requestedViewMode && requestedViewMode !== viewMode) {
+      setViewMode(requestedViewMode);
+      setReplayPhase('off');
+      if (onViewModeApplied) onViewModeApplied();
+    }
+  }, [requestedViewMode]);
 
   // Auto-play intro on first page load: 3s delay → 16s video → 3D replay
   useEffect(() => {

@@ -1,7 +1,8 @@
-import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, Globe } from 'lucide-react';
+import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, Globe, Orbit } from 'lucide-react';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: '3d-map', label: '3D Mission Trajectory Map', icon: Orbit },
   { id: 'live', label: 'Live', icon: Video },
   { id: 'timeline', label: 'Timeline', icon: Clock },
   { id: 'crew', label: 'Crew', icon: Users },

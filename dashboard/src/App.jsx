@@ -45,9 +45,17 @@ function Dashboard() {
   // State for expandable sections
   const [mapOpen, setMapOpen] = useState(true);
   const [timelineInView, setTimelineInView] = useState(false);
+  const [requestedViewMode, setRequestedViewMode] = useState(null);
 
   // Scroll to section when nav button clicked
   const handleNavigate = useCallback((sectionId) => {
+    // "3D Mission Trajectory Map" scrolls to 3D viewer and sets mission view
+    if (sectionId === '3d-map') {
+      setActiveSection('overview');
+      sectionRefs.overview.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      setRequestedViewMode('mission');
+      return;
+    }
     setActiveSection(sectionId);
     const ref = sectionRefs[sectionId];
     if (ref?.current) {
@@ -144,7 +152,14 @@ function Dashboard() {
                 <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
               </div>
             }>
-              <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} vectors={vectors} compact />
+              <OrbitViewer
+                trajectoryPath={trajectoryPath}
+                telemetry={telemetry}
+                vectors={vectors}
+                compact
+                requestedViewMode={requestedViewMode}
+                onViewModeApplied={() => setRequestedViewMode(null)}
+              />
             </Suspense>
           </section>
 
