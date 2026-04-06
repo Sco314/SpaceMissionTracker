@@ -23,8 +23,9 @@ const flybyMoonEci = getMoonPosition(flybyEvent.time.getTime());
 const flybyMoonScene = eciToScene(flybyMoonEci);
 const missionCenter = [flybyMoonScene[0] * 0.5, flybyMoonScene[1] * 0.5, flybyMoonScene[2] * 0.5];
 
-// North Pole camera: above Earth looking down, slight Z offset to avoid gimbal lock
-const NORTH_POLE_POS = new THREE.Vector3(0, 3, 0.01);
+// North Pole camera: above Earth looking down, Earth and spacecraft both in view
+// Height of 8 units (~80,000 km) gives clear view of Earth sphere + departure trajectory
+const NORTH_POLE_POS = new THREE.Vector3(0, 8, 0.01);
 const NORTH_POLE_LOOKAT = new THREE.Vector3(0, 0, 0);
 
 export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, preReplay, setReplaying, vectors }) {
