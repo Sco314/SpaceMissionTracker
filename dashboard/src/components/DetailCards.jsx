@@ -1,6 +1,8 @@
 import { useUnits } from '../lib/units-context.jsx';
 import { formatNumber } from '../lib/coordinates.js';
 
+const LEO_THRESHOLD_KM = 402; // 250 miles
+
 export default function DetailCards({ telemetry }) {
   const { formatDistance, formatSpeed } = useUnits();
 
@@ -9,16 +11,25 @@ export default function DetailCards({ telemetry }) {
   const distE = formatDistance(telemetry.distEarthKm);
   const distM = formatDistance(telemetry.distMoonKm);
   const vel = formatSpeed(telemetry.velocityKms);
-  const alt = formatDistance(telemetry.altitudeKm);
 
-  const cards = [
-    { label: 'Altitude', value: alt.value, unit: alt.unit },
-    { label: 'Velocity', value: vel.value, unit: vel.unit },
-    { label: 'Latitude', value: telemetry.groundTrack.lat.toFixed(2), unit: '\u00b0' },
-    { label: 'Longitude', value: telemetry.groundTrack.lon.toFixed(2), unit: '\u00b0' },
-    { label: 'Dist. Earth', value: distE.value, unit: distE.unit },
-    { label: 'Dist. Moon', value: distM.value, unit: distM.unit },
-  ];
+  const aboveLeo = telemetry.altitudeKm > LEO_THRESHOLD_KM;
+
+  const cards = [];
+
+  if (!aboveLeo) {
+    const alt = formatDistance(telemetry.altitudeKm);
+    cards.push({ label: 'Altitude', value: alt.value, unit: alt.unit });
+  }
+
+  cards.push({ label: 'Velocity', value: vel.value, unit: vel.unit });
+
+  if (!aboveLeo) {
+    cards.push({ label: 'Latitude', value: telemetry.groundTrack.lat.toFixed(2), unit: '\u00b0' });
+    cards.push({ label: 'Longitude', value: telemetry.groundTrack.lon.toFixed(2), unit: '\u00b0' });
+  }
+
+  cards.push({ label: 'Dist. Earth', value: distE.value, unit: distE.unit });
+  cards.push({ label: 'Dist. Moon', value: distM.value, unit: distM.unit });
 
   return (
     <div className="bg-space-800 rounded-xl border border-border p-3 sm:p-4">

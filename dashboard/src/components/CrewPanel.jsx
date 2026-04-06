@@ -37,9 +37,6 @@ function CrewCard({ member }) {
           />
         </div>
         <p className="text-xs text-label">{member.role}</p>
-        <p className="text-[10px] font-semibold text-live tracking-wider mt-0.5">
-          STATUS: {member.status || 'GO'}
-        </p>
         {expanded && (
           <p className="text-xs text-label mt-2 leading-relaxed border-t border-border pt-2">
             {member.bio}

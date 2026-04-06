@@ -2,23 +2,23 @@ import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, 
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-  { id: 'trajectory', label: 'Map', icon: NavIcon },
   { id: '3d', label: '3D', icon: Globe },
   { id: 'timeline', label: 'Timeline', icon: Clock },
   { id: 'crew', label: 'Crew', icon: Users },
   { id: 'live', label: 'Live', icon: Video },
   { id: 'data', label: 'Data', icon: Database },
+  { id: 'trajectory', label: '2D Trajectory Map', icon: NavIcon },
 ];
 
-export default function Navigation({ activeTab, onTabChange }) {
+export default function Navigation({ activeSection, onNavigate }) {
   return (
     <nav className="flex items-center -mb-px">
       {TABS.map(({ id, label, icon: Icon }) => {
-        const isActive = activeTab === id;
+        const isActive = activeSection === id;
         return (
           <button
             key={id}
-            onClick={() => onTabChange(id)}
+            onClick={() => onNavigate(id)}
             className={`relative flex-1 sm:flex-none flex flex-col sm:flex-row items-center justify-center gap-px sm:gap-1.5 px-1 sm:px-3 py-1.5 sm:py-2 text-[9px] sm:text-xs font-medium transition-all active:scale-95 ${
               isActive
                 ? 'text-white'
