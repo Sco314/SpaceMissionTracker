@@ -149,11 +149,64 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
       const pos = eciToScene(telemetry.position);
       const vel = telemetry.velocity;
       const vDir = new THREE.Vector3(vel.vx, vel.vz, -vel.vy).normalize();
-      targetPos.current.set(
-        pos[0] - vDir.x * 2.5,
-        pos[1] - vDir.y * 2.5 + 1.5,
-        pos[2] - vDir.z * 2.5
-      );
+
+      const distMoonKm = telemetry.distMoonKm || Infinity;
+      const moonPos = telemetry.moonPosition ? eciToScene(telemetry.moonPosition) : null;
+
+      // Moon-aware camera: blend in when < 70k km, full at < 15k km
+      // Departure: blend out, fully gone by 50k km
+      let moonBlend = 0;
+      if (moonPos && distMoonKm < 70000) {
+        const scV = new THREE.Vector3(...pos);
+        const moonV = new THREE.Vector3(...moonPos);
+        const toMoon = moonV.clone().sub(scV);
+        const velScene = new THREE.Vector3(vel.vx, vel.vz, -vel.vy);
+        const approaching = velScene.dot(toMoon) > 0;
+
+        const outerThreshold = approaching ? 70000 : 50000;
+        const innerThreshold = 15000;
+        moonBlend = Math.max(0, Math.min(1,
+          (outerThreshold - distMoonKm) / (outerThreshold - innerThreshold)
+        ));
+      }
+
+      if (moonBlend > 0.001 && moonPos) {
+        const scV = new THREE.Vector3(...pos);
+        const moonV = new THREE.Vector3(...moonPos);
+        const toMoon = moonV.clone().sub(scV).normalize();
+
+        // Side vector perpendicular to spacecraft→Moon direction
+        const up = new THREE.Vector3(0, 1, 0);
+        const right = new THREE.Vector3().crossVectors(toMoon, up).normalize();
+
+        // Camera behind spacecraft (away from Moon), offset to side so
+        // spacecraft is in foreground and Moon is visible in background
+        const moonCamX = pos[0] - toMoon.x * 3 + right.x * 1.2;
+        const moonCamY = pos[1] - toMoon.y * 3 + 1.0;
+        const moonCamZ = pos[2] - toMoon.z * 3 + right.z * 1.2;
+
+        // Default follow position (behind velocity vector)
+        const defCamX = pos[0] - vDir.x * 2.5;
+        const defCamY = pos[1] - vDir.y * 2.5 + 1.5;
+        const defCamZ = pos[2] - vDir.z * 2.5;
+
+        // Lerp between default and moon-aware based on blend factor
+        const b = moonBlend;
+        targetPos.current.set(
+          defCamX + (moonCamX - defCamX) * b,
+          defCamY + (moonCamY - defCamY) * b,
+          defCamZ + (moonCamZ - defCamZ) * b
+        );
+      } else {
+        // Default spacecraft follow — behind velocity vector
+        targetPos.current.set(
+          pos[0] - vDir.x * 2.5,
+          pos[1] - vDir.y * 2.5 + 1.5,
+          pos[2] - vDir.z * 2.5
+        );
+      }
+
+      // Always look at spacecraft (keep it centered)
       targetLookAt.current.set(pos[0], pos[1], pos[2]);
       camera.position.lerp(targetPos.current, 0.03);
       controlsRef.current.target.lerp(targetLookAt.current, 0.03);
