@@ -16,7 +16,7 @@ import { LAUNCH_TIME } from './lib/mission-data.js';
 const OrbitViewer = lazy(() => import('./components/OrbitViewer/OrbitViewer.jsx'));
 
 function Dashboard() {
-  const { telemetry, trajectoryPath } = useMissionData();
+  const { telemetry, trajectoryPath, vectors } = useMissionData();
   const [activeTab, setActiveTab] = useState('overview');
 
   return (
@@ -61,7 +61,7 @@ function Dashboard() {
                 <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
               </div>
             }>
-              <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} compact />
+              <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} vectors={vectors} compact />
             </Suspense>
 
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-3 sm:gap-5">
@@ -99,7 +99,7 @@ function Dashboard() {
               <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
             </div>
           }>
-            <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} />
+            <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} vectors={vectors} />
           </Suspense>
         )}
 
