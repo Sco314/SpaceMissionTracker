@@ -35,10 +35,9 @@ function Dashboard() {
   // Section refs for scroll-to
   const sectionRefs = {
     overview: useRef(null),
-    '3d': useRef(null),
+    live: useRef(null),
     timeline: useRef(null),
     crew: useRef(null),
-    live: useRef(null),
     data: useRef(null),
     trajectory: useRef(null),
   };
@@ -53,7 +52,6 @@ function Dashboard() {
     const ref = sectionRefs[sectionId];
     if (ref?.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
-      // Auto-expand map and timeline when navigated to
       if (sectionId === 'trajectory') setMapOpen(true);
       if (sectionId === 'timeline') setTimelineInView(true);
     }
@@ -61,7 +59,7 @@ function Dashboard() {
 
   // Track timeline visibility for mobile auto-collapse
   useEffect(() => {
-    if (isDesktop) return; // Desktop stays expanded, no observer needed
+    if (isDesktop) return;
     const el = sectionRefs.timeline.current;
     if (!el) return;
     const observer = new IntersectionObserver(
@@ -90,7 +88,6 @@ function Dashboard() {
     return () => observer.disconnect();
   }, []);
 
-  // Timeline: expanded on desktop always, on mobile only when in view
   const timelineExpanded = isDesktop || timelineInView;
 
   return (
@@ -139,41 +136,46 @@ function Dashboard() {
       {/* All sections on one scrollable page */}
       <main className="max-w-[1440px] mx-auto px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
 
-        {/* Overview / 3D Viewer */}
-        <section ref={sectionRefs.overview} data-section="overview">
-          <Suspense fallback={
-            <div className="w-full rounded-2xl bg-space-800 border border-white/[0.06] flex items-center justify-center" style={{ height: '60vh', minHeight: '350px' }}>
-              <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
-            </div>
-          }>
-            <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} vectors={vectors} compact />
-          </Suspense>
-        </section>
+        {/* Row 1: 3D Viewer & Live Video — side-by-side on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
+          <section ref={sectionRefs.overview} data-section="overview">
+            <Suspense fallback={
+              <div className="w-full rounded-2xl bg-space-800 border border-white/[0.06] flex items-center justify-center" style={{ height: '50vh', minHeight: '300px' }}>
+                <div className="text-slate-500 text-sm">Loading 3D viewer...</div>
+              </div>
+            }>
+              <OrbitViewer trajectoryPath={trajectoryPath} telemetry={telemetry} vectors={vectors} compact />
+            </Suspense>
+          </section>
 
-        {/* Live Coverage */}
-        <section ref={sectionRefs.live} data-section="live">
-          <LiveVideo />
-        </section>
+          <section ref={sectionRefs.live} data-section="live">
+            <LiveVideo />
+          </section>
+        </div>
 
-        {/* Timeline */}
-        <section ref={sectionRefs.timeline} data-section="timeline">
-          <MissionTimeline currentTime={telemetry?.epoch?.getTime()} expanded={timelineExpanded} />
-        </section>
+        {/* Row 2: Timeline & Crew — side-by-side on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
+          <section ref={sectionRefs.timeline} data-section="timeline">
+            <MissionTimeline currentTime={telemetry?.epoch?.getTime()} expanded={timelineExpanded} />
+          </section>
 
-        {/* Detailed Metrics */}
-        <section ref={sectionRefs.data} data-section="data">
-          <DetailCards telemetry={telemetry} />
-        </section>
-
-        {/* Crew & Spacecraft */}
-        <section ref={sectionRefs.crew} data-section="crew">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <section ref={sectionRefs.crew} data-section="crew">
             <CrewPanel />
-            <SpacecraftPanel />
-          </div>
-        </section>
+          </section>
+        </div>
 
-        {/* 2D Trajectory Map */}
+        {/* Row 3: Data & Spacecraft — side-by-side on desktop */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
+          <section ref={sectionRefs.data} data-section="data">
+            <DetailCards telemetry={telemetry} />
+          </section>
+
+          <section>
+            <SpacecraftPanel />
+          </section>
+        </div>
+
+        {/* Row 4: 2D Trajectory Map — full width */}
         <section ref={sectionRefs.trajectory} data-section="trajectory">
           <details className="bg-space-800 rounded-2xl border border-border" open={mapOpen}>
             <summary
