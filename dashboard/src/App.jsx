@@ -116,14 +116,14 @@ function Dashboard() {
                 <span className="text-[9px] text-live font-medium">Live</span>
               </div>
               <a
-                href="https://buymeacoffee.com"
+                href="https://buymeacoffee.com/ssandvik"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
-                title="Buy Me a Coffee"
+                title="Support Me & This Project"
               >
                 <Coffee size={12} />
-                <span className="text-[8px] font-medium hidden sm:inline">Support</span>
+                <span className="text-[8px] font-medium hidden sm:inline">Support Me & This Project</span>
               </a>
               <div className="hidden lg:block">
                 <UnitToggle compact />
