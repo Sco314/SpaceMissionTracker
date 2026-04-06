@@ -101,7 +101,7 @@ export default function LiveVideo() {
       {rssVideos.length > 0 && (
         <div className="px-3 py-2 border-t border-border">
           <p className="text-[9px] text-label mb-1.5">More Artemis Videos</p>
-          <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
+          <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {rssVideos.map(v => (
               <button
                 key={v.id}

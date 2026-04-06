@@ -23,6 +23,7 @@ const ICONS = {
 
 function SpacecraftCard({ item }) {
   const [expanded, setExpanded] = useState(false);
+  const [imgError, setImgError] = useState(false);
   const Icon = ICONS[item.icon] || Rocket;
 
   return (
@@ -43,9 +44,19 @@ function SpacecraftCard({ item }) {
         </div>
         <p className="text-sm font-medium text-slate-200 mt-0.5">{item.value}</p>
         {expanded && (
-          <p className="text-xs text-label mt-2 leading-relaxed border-t border-border pt-2">
-            {item.details}
-          </p>
+          <div className="mt-2 border-t border-border pt-2">
+            {item.image && !imgError && (
+              <img
+                src={item.image}
+                alt={item.label}
+                className="w-full rounded-lg mb-2 max-h-40 object-cover"
+                onError={() => setImgError(true)}
+              />
+            )}
+            <p className="text-xs text-label leading-relaxed">
+              {item.details}
+            </p>
+          </div>
         )}
       </div>
     </button>
