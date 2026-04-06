@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { MISSION_EVENTS } from '../lib/mission-data.js';
 import { EVENT_ICONS } from '../lib/icon-map.js';
 import { formatCountdown } from '../lib/coordinates.js';
@@ -24,23 +24,25 @@ function formatRelativeTime(eventTime, now) {
   return diff > 0 ? `in ${timeStr}` : `${timeStr} ago`;
 }
 
-export default function MissionTimeline({ currentTime, expanded: alwaysExpanded = false }) {
-  const now = currentTime || Date.now();
+export default function MissionTimeline({ currentTime }) {
+  // Round to nearest 10 seconds to avoid re-rendering on every telemetry tick
+  const coarseNow = Math.floor((currentTime || Date.now()) / 10000) * 10000;
+
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [showAll, setShowAll] = useState(false);
 
-  const activeIdx = MISSION_EVENTS.findIndex((event, i) => {
-    const isPast = event.time.getTime() <= now;
-    return isPast && (
-      i === MISSION_EVENTS.length - 1 ||
-      MISSION_EVENTS[i + 1].time.getTime() > now
-    );
-  });
+  const activeIdx = useMemo(() => {
+    return MISSION_EVENTS.findIndex((event, i) => {
+      const isPast = event.time.getTime() <= coarseNow;
+      return isPast && (
+        i === MISSION_EVENTS.length - 1 ||
+        MISSION_EVENTS[i + 1].time.getTime() > coarseNow
+      );
+    });
+  }, [coarseNow]);
 
-  const shouldShowAll = alwaysExpanded || showAll;
-
-  // When collapsed in sidebar: show active + one before + one after
-  const eventsToShow = shouldShowAll
+  // When collapsed: show active + one before + one after
+  const eventsToShow = showAll
     ? MISSION_EVENTS
     : MISSION_EVENTS.filter((_, i) => {
         return i >= activeIdx - 1 && i <= activeIdx + 1;
@@ -55,15 +57,13 @@ export default function MissionTimeline({ currentTime, expanded: alwaysExpanded 
       {/* Header */}
       <div className="px-3 py-2 border-b border-border flex items-center justify-between">
         <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Timeline</h3>
-        {!alwaysExpanded && (
-          <button
-            onClick={() => setShowAll(s => !s)}
-            className="text-[9px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
-          >
-            {showAll ? 'Less' : 'All'}
-            <ChevronDown size={10} className={`transition-transform ${showAll ? 'rotate-180' : ''}`} />
-          </button>
-        )}
+        <button
+          onClick={() => setShowAll(s => !s)}
+          className="text-[9px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
+        >
+          {showAll ? 'Less' : 'All'}
+          <ChevronDown size={10} className={`transition-transform ${showAll ? 'rotate-180' : ''}`} />
+        </button>
       </div>
 
       {/* Timeline spine */}
@@ -71,8 +71,8 @@ export default function MissionTimeline({ currentTime, expanded: alwaysExpanded 
         {/* Progress line */}
         <div className="absolute left-[21px] top-2 bottom-2 w-px">
           {MISSION_EVENTS.map((event, i) => {
-            if (!shouldShowAll && !eventsToShow.includes(event)) return null;
-            const isPast = event.time.getTime() <= now;
+            if (!showAll && !eventsToShow.includes(event)) return null;
+            const isPast = event.time.getTime() <= coarseNow;
             const isActive = i === activeIdx;
             return (
               <div
@@ -93,12 +93,12 @@ export default function MissionTimeline({ currentTime, expanded: alwaysExpanded 
         <div className="space-y-px">
           {eventsToShow.map((event) => {
             const i = MISSION_EVENTS.indexOf(event);
-            const isPast = event.time.getTime() <= now;
+            const isPast = event.time.getTime() <= coarseNow;
             const isActive = i === activeIdx;
             const isFuture = !isPast;
-            const isExpanded = alwaysExpanded || expandedIdx === i;
+            const isExpanded = expandedIdx === i;
             const Icon = EVENT_ICONS[event.type];
-            const relTime = formatRelativeTime(event.time.getTime(), now);
+            const relTime = formatRelativeTime(event.time.getTime(), coarseNow);
 
             return (
               <button
