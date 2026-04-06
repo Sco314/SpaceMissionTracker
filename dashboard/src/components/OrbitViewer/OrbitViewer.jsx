@@ -121,8 +121,8 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
           duration={5000}
           startSec={8}
           endSec={13}
-          onEnd={() => setReplayPhase(replayPhase === 'intro-video' ? 'intro-3d' : '3d')}
-          onSkip={() => setReplayPhase(replayPhase === 'intro-video' ? 'intro-3d' : '3d')}
+          onEnd={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
+          onSkip={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
         />
       )}
 
@@ -146,6 +146,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
           viewMode={viewMode}
           setViewMode={setViewMode}
           replaying={is3dReplay}
+          preReplay={showVideo}
           setReplaying={(val) => { if (!val) setReplayPhase('off'); }}
           vectors={vectors}
         />
