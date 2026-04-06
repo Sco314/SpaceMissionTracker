@@ -20,7 +20,7 @@ const moonEphemeris = moonEphemerisRaw.map(m => ({
 }));
 
 // Interpolate Moon position from real ephemeris data
-function getMoonPosition(timeMs) {
+export function getMoonPosition(timeMs) {
   if (moonEphemeris.length === 0) return { x: 0, y: 0, z: 0 };
 
   // Clamp to range

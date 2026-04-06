@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Canvas } from '@react-three/fiber';
-import { Orbit, Rocket, Moon, Globe } from 'lucide-react';
+import { Orbit, Rocket, Moon, Globe, Play } from 'lucide-react';
 import OrbitScene from './OrbitScene.jsx';
 import TelemetryGauges from './TelemetryGauges.jsx';
 
@@ -11,8 +11,9 @@ const VIEW_MODES = [
   { id: 'earth', label: 'Earth', Icon: Globe },
 ];
 
-export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
+export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compact }) {
   const [viewMode, setViewMode] = useState('spacecraft');
+  const [replaying, setReplaying] = useState(false);
 
   const heightStyle = compact
     ? { height: '60vh', minHeight: '350px' }
@@ -27,9 +28,9 @@ export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
         {VIEW_MODES.map(({ id, label, Icon }) => (
           <button
             key={id}
-            onClick={() => setViewMode(id)}
+            onClick={() => { setViewMode(id); setReplaying(false); }}
             className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all ${
-              viewMode === id
+              viewMode === id && !replaying
                 ? 'bg-white/10 text-white'
                 : 'bg-white/5 text-slate-400 hover:text-white'
             }`}
@@ -38,6 +39,20 @@ export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
             <span>{label}</span>
           </button>
         ))}
+
+        {/* Replay button */}
+        <button
+          onClick={() => setReplaying(true)}
+          disabled={replaying}
+          className={`flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-[10px] font-medium transition-all mt-1 ${
+            replaying
+              ? 'bg-amber-500/20 text-amber-300 animate-pulse'
+              : 'bg-white/5 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10'
+          }`}
+        >
+          <Play size={14} />
+          <span>{replaying ? 'Replaying...' : 'Replay'}</span>
+        </button>
       </div>
 
       {/* Telemetry gauges */}
@@ -58,6 +73,9 @@ export default function OrbitViewer({ trajectoryPath, telemetry, compact }) {
           trajectoryPath={trajectoryPath}
           telemetry={telemetry}
           viewMode={viewMode}
+          replaying={replaying}
+          setReplaying={setReplaying}
+          vectors={vectors}
         />
       </Canvas>
 
