@@ -28,7 +28,7 @@ const missionCenter = [flybyMoonScene[0] * 0.5, flybyMoonScene[1] * 0.5, flybyMo
 const NORTH_POLE_POS = new THREE.Vector3(0, 8, 0.01);
 const NORTH_POLE_LOOKAT = new THREE.Vector3(0, 0, 0);
 
-export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, preReplay, setReplaying, vectors }) {
+export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, setReplaying, vectors }) {
   const controlsRef = useRef();
   const { camera } = useThree();
   const targetPos = useRef(new THREE.Vector3(0, 60, 0));
@@ -64,16 +64,6 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
   // Animate camera for view modes
   useFrame((_, delta) => {
     if (!controlsRef.current) return;
-
-    // --- PRE-REPLAY: position camera at North Pole while video overlay is showing ---
-    if (preReplay) {
-      targetPos.current.copy(NORTH_POLE_POS);
-      targetLookAt.current.copy(NORTH_POLE_LOOKAT);
-      camera.position.lerp(targetPos.current, 0.1);
-      controlsRef.current.target.lerp(targetLookAt.current, 0.1);
-      controlsRef.current.update();
-      return;
-    }
 
     // --- REPLAY MODE ---
     if (replaying && vectors && vectors.length > 0) {
