@@ -1,4 +1,4 @@
-import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, Globe, Orbit } from 'lucide-react';
+import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, Globe, Orbit, Camera } from 'lucide-react';
 
 const TABS = [
   { id: 'overview', label: 'Overview', icon: LayoutDashboard },
@@ -8,6 +8,7 @@ const TABS = [
   { id: 'crew', label: 'Crew', icon: Users },
   { id: 'data', label: 'Data', icon: Database },
   { id: 'trajectory', label: '2D Trajectory Map', icon: NavIcon },
+  { id: 'gallery', label: 'Gallery', icon: Camera },
 ];
 
 export default function Navigation({ activeSection, onNavigate }) {
