@@ -92,7 +92,7 @@ function Dashboard() {
           <div className="flex items-center justify-between h-9 sm:h-10">
             <div className="flex items-center gap-2 min-w-0">
               <img src="/artemis-logo.jpeg" alt="Artemis" className="w-9 h-9 sm:w-9 sm:h-9 flex-shrink-0 rounded" />
-              <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-7 sm:h-8 flex-shrink-0" />
+              <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-9 sm:h-10 flex-shrink-0" />
               <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
             </div>
 
