@@ -11,6 +11,7 @@ import DetailCards from './components/DetailCards.jsx';
 import SpacecraftPanel from './components/SpacecraftPanel.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
 import PhotoGallery from './components/PhotoGallery.jsx';
+import MissionBlog from './components/MissionBlog.jsx';
 import UnitToggle from './components/UnitToggle.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
 import { Coffee, MessageSquare } from 'lucide-react';
@@ -209,6 +210,11 @@ function Dashboard() {
         {/* Row 5: Photo Gallery — full width */}
         <section ref={sectionRefs.gallery} data-section="gallery">
           <PhotoGallery />
+        </section>
+
+        {/* Row 6: NASA Mission Blog — dockable */}
+        <section>
+          <MissionBlog />
         </section>
 
       </main>
