@@ -44,7 +44,6 @@ function Dashboard() {
 
   // State for expandable sections
   const [mapOpen, setMapOpen] = useState(true);
-  const [timelineInView, setTimelineInView] = useState(false);
   const [requestedViewMode, setRequestedViewMode] = useState(null);
 
   // Scroll to section when nav button clicked
@@ -61,22 +60,8 @@ function Dashboard() {
     if (ref?.current) {
       ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
       if (sectionId === 'trajectory') setMapOpen(true);
-      if (sectionId === 'timeline') setTimelineInView(true);
     }
   }, []);
-
-  // Track timeline visibility for mobile auto-collapse
-  useEffect(() => {
-    if (isDesktop) return;
-    const el = sectionRefs.timeline.current;
-    if (!el) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => setTimelineInView(entry.isIntersecting),
-      { threshold: 0.3 }
-    );
-    observer.observe(el);
-    return () => observer.disconnect();
-  }, [isDesktop]);
 
   // Track active section on scroll
   useEffect(() => {
@@ -95,8 +80,6 @@ function Dashboard() {
     entries.forEach(([, ref]) => { if (ref.current) observer.observe(ref.current); });
     return () => observer.disconnect();
   }, []);
-
-  const timelineExpanded = isDesktop || timelineInView;
 
   return (
     <div className="min-h-screen bg-space-900">
@@ -172,7 +155,7 @@ function Dashboard() {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
           <div className="space-y-3 sm:space-y-5">
             <section ref={sectionRefs.timeline} data-section="timeline">
-              <MissionTimeline currentTime={telemetry?.epoch?.getTime()} expanded={timelineExpanded} />
+              <MissionTimeline currentTime={telemetry?.epoch?.getTime()} />
             </section>
 
             <section ref={sectionRefs.data} data-section="data">
