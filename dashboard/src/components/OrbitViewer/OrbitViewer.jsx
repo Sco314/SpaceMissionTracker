@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { Orbit, Rocket, Moon, Globe, Play } from 'lucide-react';
 import OrbitScene from './OrbitScene.jsx';
@@ -11,40 +11,9 @@ const VIEW_MODES = [
   { id: 'earth', label: 'Earth', Icon: Globe },
 ];
 
-function YouTubeOverlay({ onEnd, onSkip, duration = 5000, startSec = 8, endSec = 13 }) {
-  const timerRef = useRef(null);
-
-  const handleLoad = () => {
-    timerRef.current = setTimeout(onEnd, duration);
-  };
-
-  useEffect(() => {
-    return () => { if (timerRef.current) clearTimeout(timerRef.current); };
-  }, []);
-
-  return (
-    <div className="absolute inset-0 z-20 bg-black flex items-center justify-center">
-      <iframe
-        src={`https://www.youtube.com/embed/vMGuObY8_sw?autoplay=1&mute=1&controls=0&modestbranding=1&rel=0&playsinline=1&start=${startSec}&end=${endSec}`}
-        title="Artemis II Launch"
-        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-        className="h-full aspect-[9/16] max-w-full"
-        style={{ border: 'none' }}
-        onLoad={handleLoad}
-      />
-      <button
-        onClick={onSkip}
-        className="absolute bottom-4 right-4 z-30 px-3 py-1.5 rounded-lg bg-white/10 text-white text-xs font-medium hover:bg-white/20 transition-colors backdrop-blur-sm"
-      >
-        Skip ▸
-      </button>
-    </div>
-  );
-}
-
 export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compact, requestedViewMode, onViewModeApplied }) {
   const [viewMode, setViewMode] = useState('spacecraft');
-  const [replayPhase, setReplayPhase] = useState('intro-video'); // starts with video on page load
+  const [replayPhase, setReplayPhase] = useState('intro-3d'); // starts with 3D intro on page load
   // Allow parent to request a view mode change (e.g. from nav)
   useEffect(() => {
     if (requestedViewMode && requestedViewMode !== viewMode) {
@@ -59,11 +28,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
     : { height: 'calc(100vh - 120px)', minHeight: '400px' };
 
   const isPlaying = replayPhase !== 'off';
-  const replayLabel = replayPhase === 'off'
-    ? 'Replay Launch to Now'
-    : (replayPhase === 'video' || replayPhase === 'intro-video') ? 'Playing...' : 'Replaying...';
-
-  const showVideo = replayPhase === 'video' || replayPhase === 'intro-video';
+  const replayLabel = isPlaying ? 'Replaying...' : 'Replay Launch to Now';
   const is3dReplay = replayPhase === '3d' || replayPhase === 'intro-3d';
 
   return (
@@ -74,7 +39,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
       <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
         {/* Replay button */}
         <button
-          onClick={() => setReplayPhase('video')}
+          onClick={() => setReplayPhase('3d')}
           disabled={isPlaying}
           className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
             isPlaying
@@ -103,17 +68,6 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
         ))}
       </div>
 
-      {/* YouTube video overlay */}
-      {showVideo && (
-        <YouTubeOverlay
-          duration={10000}
-          startSec={8}
-          endSec={18}
-          onEnd={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
-          onSkip={() => setReplayPhase(prev => prev === 'intro-video' ? 'intro-3d' : '3d')}
-        />
-      )}
-
       {/* Telemetry gauges */}
       <TelemetryGauges telemetry={telemetry} />
 
@@ -134,7 +88,6 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
           viewMode={viewMode}
           setViewMode={setViewMode}
           replaying={is3dReplay}
-          preReplay={showVideo}
           setReplaying={(val) => { if (!val) setReplayPhase('off'); }}
           vectors={vectors}
         />

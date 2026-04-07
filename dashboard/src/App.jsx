@@ -12,7 +12,7 @@ import SpacecraftPanel from './components/SpacecraftPanel.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
 import UnitToggle from './components/UnitToggle.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
-import { Coffee } from 'lucide-react';
+import { Coffee, MessageSquare } from 'lucide-react';
 
 const OrbitViewer = lazy(() => import('./components/OrbitViewer/OrbitViewer.jsx'));
 
@@ -104,14 +104,24 @@ function Dashboard() {
                 <span className="text-[9px] text-live font-medium">Live</span>
               </div>
               <a
+                href="https://forms.gle/d78BfCq7htgg3RZH9"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 transition-colors"
+                title="Send Feedback"
+              >
+                <MessageSquare size={12} />
+                <span className="text-[8px] font-medium hidden sm:inline">Feedback</span>
+              </a>
+              <a
                 href="https://buymeacoffee.com/ssandvik"
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
-                title="Support Me & This Project"
+                title="Support This"
               >
                 <Coffee size={12} />
-                <span className="text-[8px] font-medium hidden sm:inline">Support Me & This Project</span>
+                <span className="text-[8px] font-medium">Support This</span>
               </a>
               <div className="hidden lg:block">
                 <UnitToggle compact />
