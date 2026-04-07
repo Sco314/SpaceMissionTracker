@@ -10,6 +10,7 @@ import CrewPanel from './components/CrewPanel.jsx';
 import DetailCards from './components/DetailCards.jsx';
 import SpacecraftPanel from './components/SpacecraftPanel.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
+import PhotoGallery from './components/PhotoGallery.jsx';
 import UnitToggle from './components/UnitToggle.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
 import { Coffee, MessageSquare } from 'lucide-react';
@@ -40,6 +41,7 @@ function Dashboard() {
     crew: useRef(null),
     data: useRef(null),
     trajectory: useRef(null),
+    gallery: useRef(null),
   };
 
   // State for expandable sections
@@ -169,6 +171,9 @@ function Dashboard() {
             </section>
 
             <section ref={sectionRefs.data} data-section="data">
+              <div className="lg:hidden mb-3">
+                <UnitToggle />
+              </div>
               <DetailCards telemetry={telemetry} />
             </section>
           </div>
@@ -199,6 +204,11 @@ function Dashboard() {
               </div>
             )}
           </details>
+        </section>
+
+        {/* Row 5: Photo Gallery — full width */}
+        <section ref={sectionRefs.gallery} data-section="gallery">
+          <PhotoGallery />
         </section>
 
       </main>
