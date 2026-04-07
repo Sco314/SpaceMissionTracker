@@ -89,7 +89,7 @@ function Dashboard() {
       {/* Header */}
       <header className="bg-space-800/95 backdrop-blur-sm sticky top-0 z-50">
         <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
-          <div className="flex items-center justify-between gap-4 sm:gap-6 h-9 sm:h-10">
+          <div className="flex items-center justify-between gap-5 sm:gap-6 h-9 sm:h-10">
             <div className="flex items-center gap-2 min-w-0">
               <img src="/artemis-logo.jpeg" alt="Artemis" className="w-9 h-9 sm:w-9 sm:h-9 flex-shrink-0 rounded" />
               <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-9 sm:h-10 flex-shrink-0" />
