@@ -108,10 +108,10 @@ function Dashboard() {
                 target="_blank"
                 rel="noopener noreferrer"
                 className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 transition-colors"
-                title="Send Feedback"
+                title="Contact"
               >
                 <MessageSquare size={12} />
-                <span className="text-[8px] font-medium hidden sm:inline">Feedback</span>
+                <span className="text-[8px] font-medium">Contact</span>
               </a>
               <a
                 href="https://buymeacoffee.com/ssandvik"
