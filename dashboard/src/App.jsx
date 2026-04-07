@@ -88,8 +88,8 @@ function Dashboard() {
         <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
           <div className="flex items-center justify-between h-9 sm:h-10">
             <div className="flex items-center gap-2 min-w-0">
-              <img src="/artemis-ii-patch.svg" alt="" className="w-5 h-5 flex-shrink-0" />
-              <span className="text-xs font-semibold text-white truncate">Artemis II</span>
+              <img src="/artemis-logo.jpeg" alt="Artemis" className="w-6 h-6 sm:w-7 sm:h-7 flex-shrink-0 rounded" />
+              <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-3 sm:h-3.5 flex-shrink-0" />
               <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
             </div>
 
