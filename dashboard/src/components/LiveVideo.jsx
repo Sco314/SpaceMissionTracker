@@ -88,7 +88,7 @@ export default function LiveVideo() {
         )}
         {loaded && (
           <iframe
-            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&mute=1&modestbranding=1&rel=0`}
+            src={`https://www.youtube.com/embed/${activeStream.videoId}?autoplay=1&modestbranding=1&rel=0`}
             title={activeStream.label}
             allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
             allowFullScreen
