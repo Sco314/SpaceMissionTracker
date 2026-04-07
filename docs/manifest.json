@@ -1,0 +1,16 @@
+{
+  "name": "Artemis II Mission Dashboard",
+  "short_name": "Artemis II",
+  "description": "Live NASA Artemis II moon mission tracker — telemetry, trajectory, crew, and timeline.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0a0e1a",
+  "theme_color": "#0a0e1a",
+  "icons": [
+    {
+      "src": "/artemis-logo.jpeg",
+      "sizes": "512x512",
+      "type": "image/jpeg"
+    }
+  ]
+}

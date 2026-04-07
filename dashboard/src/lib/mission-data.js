@@ -3,12 +3,12 @@
  * Times sourced from NASA blog updates (EDT converted to UTC +4h).
  */
 
-export const LAUNCH_TIME = new Date('2026-04-01T16:42:00Z');
+export const LAUNCH_TIME = new Date('2026-04-01T22:35:00Z');
 
 export const MISSION_EVENTS = [
   {
     type: 'launch',
-    time: new Date('2026-04-01T16:42:00Z'),
+    time: new Date('2026-04-01T22:35:00Z'),
     label: 'Launch',
     description: 'Space Launch System lifts off from Kennedy Space Center Launch Complex 39B.',
     details: 'The SLS Block 1 rocket carries the Orion spacecraft and four crew members on the first crewed Artemis mission. Two solid rocket boosters and four RS-25 engines generate 8.8 million pounds of thrust at liftoff.',
