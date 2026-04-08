@@ -89,13 +89,12 @@ function Dashboard() {
     {/* Header */}
     <header className="bg-space-800/95 backdrop-blur-sm sticky top-0 z-50">
       <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between gap-3 sm:gap-5 h-9 sm:h-10">
-          <div className="flex items-center gap-2 min-w-0">
-            <img src="/artemis-logo.jpeg" alt="Artemis" className="w-9 h-9 flex-shrink-0 rounded" />
-            <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-9 sm:h-10 flex-shrink-0" />
+        <div className="flex items-center justify-between gap-3 sm:gap-5 h-12 sm:h-14">
+          <div className="flex items-center gap-1 min-w-0">
+            <img src="/artemis-logo.jpeg" alt="Artemis" className="w-10 h-10 sm:w-11 sm:h-11 flex-shrink-0 rounded" />
+            <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-10 sm:h-12 flex-shrink-0" />
             <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
           </div>
-
 
             <div className="flex items-center gap-2.5">
               {telemetry && (
