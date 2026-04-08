@@ -1,5 +1,5 @@
 import { createContext, useContext, useState, useCallback } from 'react';
-import { formatNumber, kmsToMph, kmToMiles } from './coordinates.js';
+import { formatNumber, kmsToMph, kmsToKph, kmsToMis, kmToMiles } from './coordinates.js';
 
 const UnitsContext = createContext(null);
 
@@ -32,9 +32,9 @@ export function UnitsProvider({ children }) {
     update({ distance: units.distance === 'km' ? 'mi' : 'km' });
   }, [units.distance, update]);
 
-  const toggleSpeed = useCallback(() => {
-    update({ speed: units.speed === 'km/s' ? 'mph' : 'km/s' });
-  }, [units.speed, update]);
+  const setSpeed = useCallback((unit) => {
+    update({ speed: unit });
+  }, [update]);
 
   const toggleTime = useCallback(() => {
     update({ time: units.time === 'utc' ? 'local' : 'utc' });
@@ -48,10 +48,17 @@ export function UnitsProvider({ children }) {
   }, [units.distance]);
 
   const formatSpeed = useCallback((kms) => {
-    if (units.speed === 'mph') {
-      return { value: formatNumber(kmsToMph(kms)), unit: 'mph' };
+    switch (units.speed) {
+      case 'mph':
+        return { value: formatNumber(kmsToMph(kms)), unit: 'mph' };
+      case 'kph':
+        return { value: formatNumber(kmsToKph(kms)), unit: 'kph' };
+      case 'mi/s':
+        return { value: kmsToMis(kms).toFixed(2), unit: 'mi/s' };
+      case 'km/s':
+      default:
+        return { value: kms.toFixed(2), unit: 'km/s' };
     }
-    return { value: kms.toFixed(2), unit: 'km/s' };
   }, [units.speed]);
 
   const formatTime = useCallback((date) => {
@@ -67,7 +74,7 @@ export function UnitsProvider({ children }) {
 
   return (
     <UnitsContext.Provider value={{
-      units, toggleDistance, toggleSpeed, toggleTime,
+      units, toggleDistance, setSpeed, toggleTime,
       formatDistance, formatSpeed, formatTime,
     }}>
       {children}

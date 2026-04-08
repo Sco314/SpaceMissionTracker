@@ -35,6 +35,16 @@ export function kmsToMph(kms) {
   return kms * KMS_TO_MPH;
 }
 
+/** km/s to km/h (kph) */
+export function kmsToKph(kms) {
+  return kms * 3600;
+}
+
+/** km/s to miles per second */
+export function kmsToMis(kms) {
+  return kms * KM_TO_MILES;
+}
+
 /** km to miles */
 export function kmToMiles(km) {
   return km * KM_TO_MILES;

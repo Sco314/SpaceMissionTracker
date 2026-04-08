@@ -11,7 +11,7 @@ import SpacecraftPanel from './components/SpacecraftPanel.jsx';
 import LiveVideo from './components/LiveVideo.jsx';
 import PhotoGallery from './components/PhotoGallery.jsx';
 import MissionBlog from './components/MissionBlog.jsx';
-import UnitToggle from './components/UnitToggle.jsx';
+import SettingsPopover from './components/SettingsPopover.jsx';
 import { LAUNCH_TIME } from './lib/mission-data.js';
 import { Coffee, MessageSquare } from 'lucide-react';
 
@@ -119,12 +119,13 @@ function Dashboard() {
                 href="https://buymeacoffee.com/ssandvik"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                className="flex items-center px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
                 title="Support This"
+                aria-label="Support This"
               >
-                <Coffee size={12} />
-                <span className="text-[8px] font-medium">Support This</span>
+                <Coffee size={14} />
               </a>
+              <SettingsPopover />
             </div>
           </div>
 
@@ -135,8 +136,6 @@ function Dashboard() {
 
       {/* All sections on one scrollable page */}
       <main className="max-w-[1440px] mx-auto px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
-
-        <UnitToggle />
 
         {/* Row 1: 3D Viewer & Live Video — side-by-side on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
