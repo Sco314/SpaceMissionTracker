@@ -31,9 +31,9 @@ export default function SettingsPopover() {
         title="Settings"
         aria-label="Settings"
         aria-expanded={open}
-        className="flex items-center px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 transition-colors"
+        className="flex items-center px-1.5 py-1 rounded bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 transition-colors"
       >
-        <Settings size={14} />
+        <Settings size={18} />
       </button>
 
       {open && (
