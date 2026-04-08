@@ -8,9 +8,9 @@ const STORAGE_KEY = 'artemis-units';
 function loadPrefs() {
   try {
     const stored = localStorage.getItem(STORAGE_KEY);
-    if (stored) return JSON.parse(stored);
+    if (stored) return { distance: 'mi', speed: 'mph', time: 'local', ...JSON.parse(stored) };
   } catch {}
-  return { distance: 'km', speed: 'km/s', time: 'utc' };
+  return { distance: 'mi', speed: 'mph', time: 'local' };
 }
 
 function savePrefs(prefs) {
@@ -59,10 +59,10 @@ export function UnitsProvider({ children }) {
     if (units.time === 'local') {
       return date.toLocaleString(undefined, {
         month: 'short', day: 'numeric',
-        hour: '2-digit', minute: '2-digit', second: '2-digit',
+        hour: '2-digit', minute: '2-digit',
       });
     }
-    return date.toISOString().slice(0, 19).replace('T', ' ') + ' UTC';
+    return date.toISOString().slice(5, 16).replace('T', ' ') + ' UTC';
   }, [units.time]);
 
   return (

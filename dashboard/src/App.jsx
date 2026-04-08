@@ -3,7 +3,6 @@ import { UnitsProvider } from './lib/units-context.jsx';
 import { useMissionData } from './lib/useMissionData.js';
 import { formatMET } from './lib/coordinates.js';
 import Navigation from './components/Navigation.jsx';
-import TelemetryPanel from './components/TelemetryPanel.jsx';
 import TrajectoryMap from './components/TrajectoryMap.jsx';
 import MissionTimeline from './components/MissionTimeline.jsx';
 import CrewPanel from './components/CrewPanel.jsx';
@@ -126,9 +125,6 @@ function Dashboard() {
                 <Coffee size={12} />
                 <span className="text-[8px] font-medium">Support This</span>
               </a>
-              <div className="hidden lg:block">
-                <UnitToggle compact />
-              </div>
             </div>
           </div>
 
@@ -139,6 +135,8 @@ function Dashboard() {
 
       {/* All sections on one scrollable page */}
       <main className="max-w-[1440px] mx-auto px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
+
+        <UnitToggle />
 
         {/* Row 1: 3D Viewer & Live Video — side-by-side on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
@@ -172,9 +170,6 @@ function Dashboard() {
             </section>
 
             <section ref={sectionRefs.data} data-section="data">
-              <div className="lg:hidden mb-3">
-                <UnitToggle />
-              </div>
               <DetailCards telemetry={telemetry} />
             </section>
           </div>

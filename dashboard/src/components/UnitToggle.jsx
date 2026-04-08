@@ -13,37 +13,27 @@ function ToggleButton({ label, active, onClick }) {
   );
 }
 
-export default function UnitToggle({ compact = false }) {
+export default function UnitToggle() {
   const { units, toggleDistance, toggleSpeed, toggleTime } = useUnits();
 
-  if (compact) {
-    return (
-      <div className="flex items-center gap-2">
-        <ToggleButton label={units.distance === 'km' ? 'km' : 'mi'} active onClick={toggleDistance} />
-        <ToggleButton label={units.speed === 'km/s' ? 'km/s' : 'mph'} active onClick={toggleSpeed} />
-        <ToggleButton label={units.time === 'utc' ? 'UTC' : 'Local'} active onClick={toggleTime} />
-      </div>
-    );
-  }
-
   return (
-    <div className="flex flex-wrap items-center gap-4 text-xs">
+    <div className="flex items-center justify-center sm:justify-end gap-2 sm:gap-3 text-xs">
       <div className="flex items-center gap-1.5">
-        <span className="text-label">Distance</span>
+        <span className="text-label hidden sm:inline">Distance</span>
         <div className="flex bg-space-900 rounded p-0.5">
           <ToggleButton label="km" active={units.distance === 'km'} onClick={toggleDistance} />
           <ToggleButton label="mi" active={units.distance === 'mi'} onClick={toggleDistance} />
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-label">Speed</span>
+        <span className="text-label hidden sm:inline">Speed</span>
         <div className="flex bg-space-900 rounded p-0.5">
           <ToggleButton label="km/s" active={units.speed === 'km/s'} onClick={toggleSpeed} />
           <ToggleButton label="mph" active={units.speed === 'mph'} onClick={toggleSpeed} />
         </div>
       </div>
       <div className="flex items-center gap-1.5">
-        <span className="text-label">Time</span>
+        <span className="text-label hidden sm:inline">Time</span>
         <div className="flex bg-space-900 rounded p-0.5">
           <ToggleButton label="UTC" active={units.time === 'utc'} onClick={toggleTime} />
           <ToggleButton label="Local" active={units.time === 'local'} onClick={toggleTime} />
