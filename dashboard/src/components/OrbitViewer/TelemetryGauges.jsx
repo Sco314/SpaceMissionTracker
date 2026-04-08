@@ -77,7 +77,7 @@ function MissionProgress({ telemetry }) {
 }
 
 export default function TelemetryGauges({ telemetry }) {
-  const { formatDistance, formatSpeed } = useUnits();
+  const { formatDistance, formatSpeed, formatTime, units } = useUnits();
 
   if (!telemetry) return null;
 
@@ -126,6 +126,14 @@ export default function TelemetryGauges({ telemetry }) {
 
   return (
     <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10">
+      <div className="flex flex-col items-center">
+        <span className="text-[8px] font-mono text-slate-300 leading-tight whitespace-nowrap">
+          {formatTime(telemetry.epoch)}
+        </span>
+        <span className="text-[6px] text-slate-500 uppercase tracking-wider">
+          {units.time === 'local' ? 'Local' : 'UTC'}
+        </span>
+      </div>
       <Gauge value={metCompact} label="MET" unit="D:H:M" progress={metProgress} />
       <Gauge value={spd.value} label="Speed" unit={spd.unit} progress={speedProgress} />
       <Gauge value={distEarth.value} label="Earth" unit={distEarth.unit} progress={earthProgress} />
