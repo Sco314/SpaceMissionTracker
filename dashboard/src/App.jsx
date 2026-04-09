@@ -101,10 +101,6 @@ function Dashboard() {
                   MET {formatMET(telemetry.met)}
                 </span>
               )}
-              <div className="flex items-center gap-1">
-                <span className="w-1.5 h-1.5 rounded-full bg-live animate-pulse" />
-                <span className="text-[9px] text-live font-medium">Live</span>
-              </div>
               <a
                 href="https://forms.gle/d78BfCq7htgg3RZH9"
                 target="_blank"
@@ -113,7 +109,7 @@ function Dashboard() {
                 title="Contact"
               >
                 <MessageSquare size={16} />
-                <span className="text-[9px] font-medium leading-none">Contact</span>
+                <span className="text-[9px] font-medium leading-none whitespace-nowrap">Contact</span>
               </a>
               <a
                 href="https://buymeacoffee.com/ssandvik"
@@ -123,7 +119,7 @@ function Dashboard() {
                 title="Support this!"
               >
                 <Coffee size={16} />
-                <span className="text-[9px] font-medium leading-none">Support this!</span>
+                <span className="text-[9px] font-medium leading-none whitespace-nowrap">Support this!</span>
               </a>
               <SettingsPopover />
             </div>
