@@ -84,18 +84,18 @@ function Dashboard() {
   }, []);
 
   return (
-  <div className="min-h-screen bg-space-900">
-    {/* Header */}
-    <header className="bg-space-800/95 backdrop-blur-sm sticky top-0 z-50">
-      <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
-        <div className="flex items-center justify-between gap-3 sm:gap-5 h-12 sm:h-14">
-          <div className="flex items-center gap-2 min-w-0">
-            <img src="/artemis-logo.jpeg" alt="Artemis" className="hidden sm:block w-11 h-11 flex-shrink-0 rounded" />
-            <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-10 sm:h-12 flex-shrink-0" />
-            <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
-          </div>
+    <div className="min-h-screen bg-space-900">
+      {/* Header */}
+      <header className="bg-space-800/95 backdrop-blur-sm sticky top-0 z-50">
+        <div className="max-w-[1440px] mx-auto px-3 sm:px-4">
+          <div className="flex items-center justify-between gap-3 sm:gap-5 h-12 sm:h-14">
+            <div className="flex items-center gap-2 min-w-0">
+              <img src="/artemis-logo.jpeg" alt="Artemis" className="hidden sm:block w-11 h-11 flex-shrink-0 rounded" />
+              <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-10 sm:h-12 flex-shrink-0" />
+              <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
+            </div>
 
-            <div className="flex items-center gap-2.5">
+            <div className="flex items-center gap-2">
               {telemetry && (
                 <span className="text-[9px] font-mono text-slate-400 hidden md:block">
                   MET {formatMET(telemetry.met)}
@@ -109,21 +109,21 @@ function Dashboard() {
                 href="https://forms.gle/d78BfCq7htgg3RZH9"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center gap-1 px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 transition-colors"
+                className="flex flex-col items-center gap-0.5 px-1.5 py-0.5 rounded bg-slate-500/10 text-slate-400 hover:bg-slate-500/20 transition-colors"
                 title="Contact"
               >
-                <MessageSquare size={12} />
-                <span className="text-[8px] font-medium">Contact</span>
+                <MessageSquare size={16} />
+                <span className="text-[9px] font-medium leading-none">Contact</span>
               </a>
               <a
                 href="https://buymeacoffee.com/ssandvik"
                 target="_blank"
                 rel="noopener noreferrer"
-                className="flex items-center px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
-                title="Support This"
-                aria-label="Support This"
+                className="flex flex-col items-center gap-0.5 px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-400 hover:bg-amber-500/20 transition-colors"
+                title="Support this!"
               >
-                <Coffee size={14} />
+                <Coffee size={16} />
+                <span className="text-[9px] font-medium leading-none">Support this!</span>
               </a>
               <SettingsPopover />
             </div>

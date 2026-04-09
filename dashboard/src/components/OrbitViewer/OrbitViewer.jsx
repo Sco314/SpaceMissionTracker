@@ -36,8 +36,8 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
          style={heightStyle}>
 
       {/* Nav buttons */}
-      <div className="absolute left-2 top-2 z-10 flex flex-col gap-1">
-        {/* Replay button */}
+      <div className="absolute left-2 top-2 z-10 flex flex-col items-start gap-1">
+        {/* Replay button — natural width */}
         <button
           onClick={() => setReplayPhase('3d')}
           disabled={isPlaying}
@@ -51,21 +51,23 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
           <span>{replayLabel}</span>
         </button>
 
-        {/* View mode buttons */}
-        {VIEW_MODES.map(({ id, label, Icon }) => (
-          <button
-            key={id}
-            onClick={() => { setViewMode(id); setReplayPhase('off'); }}
-            className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
-              viewMode === id && !isPlaying
-                ? 'bg-white/10 text-white'
-                : 'bg-white/5 text-slate-400 hover:text-white'
-            }`}
-          >
-            <Icon size={12} />
-            <span>{label}</span>
-          </button>
-        ))}
+        {/* View mode buttons — equal width (widest label: Spacecraft) */}
+        <div className="grid grid-cols-1 gap-1">
+          {VIEW_MODES.map(({ id, label, Icon }) => (
+            <button
+              key={id}
+              onClick={() => { setViewMode(id); setReplayPhase('off'); }}
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
+                viewMode === id && !isPlaying
+                  ? 'bg-white/10 text-white'
+                  : 'bg-white/5 text-slate-400 hover:text-white'
+              }`}
+            >
+              <Icon size={12} />
+              <span>{label}</span>
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Telemetry gauges */}
