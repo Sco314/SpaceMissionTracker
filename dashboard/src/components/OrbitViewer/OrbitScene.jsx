@@ -40,6 +40,11 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
   const targetLookAt = useRef(new THREE.Vector3(0, 0, 0));
   const userInteracting = useRef(false);
   const prevViewMode = useRef(viewMode);
+  // Earth-return mode state: track whether we were in the Earth-return
+  // window last frame (to detect entry) and the wall-clock timestamp of
+  // the last auto-recenter (to re-snap every 4 minutes).
+  const wasInEarthReturn = useRef(false);
+  const earthReturnLastRecenterMs = useRef(0);
 
   // Replay state
   const replayTimeRef = useRef(0);
@@ -147,25 +152,26 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
     if (viewMode !== prevViewMode.current) {
       prevViewMode.current = viewMode;
       userInteracting.current = false;
+      wasInEarthReturn.current = false;
     }
 
-    // Let user freely orbit without camera fighting back
-    if (userInteracting.current) {
-      controlsRef.current.update();
-      return;
-    }
-
+    // Pre-compute spacecraft-mode state (moonBlend, inEarthReturn) so the
+    // Earth-return recenter logic can fire even while the user is mid-orbit.
+    let pos = null;
+    let vDir = null;
+    let moonPos = null;
+    let moonBlend = 0;
+    let inEarthReturn = false;
     if (viewMode === 'spacecraft' && telemetry?.position) {
-      const pos = eciToScene(telemetry.position);
+      pos = eciToScene(telemetry.position);
       const vel = telemetry.velocity;
-      const vDir = new THREE.Vector3(vel.vx, vel.vz, -vel.vy).normalize();
+      vDir = new THREE.Vector3(vel.vx, vel.vz, -vel.vy).normalize();
 
       const distMoonKm = telemetry.distMoonKm || Infinity;
-      const moonPos = telemetry.moonPosition ? eciToScene(telemetry.moonPosition) : null;
+      moonPos = telemetry.moonPosition ? eciToScene(telemetry.moonPosition) : null;
 
       // Moon-aware camera: blend in when < 70k km, full at < 15k km
       // Departure: blend out, fully gone by 50k km
-      let moonBlend = 0;
       if (moonPos && distMoonKm < 70000) {
         const scV = new THREE.Vector3(...pos);
         const moonV = new THREE.Vector3(...moonPos);
@@ -183,11 +189,37 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
       // Earth-return mode: active between lunar flyby and splashdown,
       // but only once the moon is no longer used as a backdrop.
       const nowMs = telemetry.epoch?.getTime() ?? 0;
-      const inEarthReturn =
+      inEarthReturn =
         moonBlend <= 0.001 &&
         nowMs > FLYBY_MS &&
         nowMs < SPLASHDOWN_MS;
+    }
 
+    // Earth-return recenter: snap camera to the framed view when first
+    // entering the mode, then re-snap every 4 minutes of wall-clock time
+    // so the user can freely orbit in between without the camera fighting.
+    if (inEarthReturn) {
+      const realNowMs = Date.now();
+      const RECENTER_INTERVAL_MS = 4 * 60 * 1000;
+      if (
+        !wasInEarthReturn.current ||
+        realNowMs - earthReturnLastRecenterMs.current > RECENTER_INTERVAL_MS
+      ) {
+        userInteracting.current = false;
+        earthReturnLastRecenterMs.current = realNowMs;
+      }
+      wasInEarthReturn.current = true;
+    } else {
+      wasInEarthReturn.current = false;
+    }
+
+    // Let user freely orbit without camera fighting back
+    if (userInteracting.current) {
+      controlsRef.current.update();
+      return;
+    }
+
+    if (viewMode === 'spacecraft' && pos) {
       if (moonBlend > 0.001 && moonPos) {
         const scV = new THREE.Vector3(...pos);
         const moonV = new THREE.Vector3(...moonPos);
@@ -218,27 +250,38 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
         // Look at spacecraft
         targetLookAt.current.set(pos[0], pos[1], pos[2]);
       } else if (inEarthReturn) {
-        // Earth-background view: camera behind spacecraft along the
-        // outward radial so Earth sits in the background. Target is
-        // offset downward so Earth projects at ~25% from the top of
-        // the 45° FOV viewport (tan(θ)/tan(22.5°) = 0.5).
+        // Earth-background view: camera sits at distance d behind the
+        // spacecraft along the outward radial, rotated upward by angle
+        // φ in the plane spanned by the radial and world Y. Orbit
+        // target is the spacecraft itself so the user's swipe pivots
+        // around Orion, and Earth (at origin) projects at y_ndc ≈ 0.5
+        // (25% from the top of the 45° vertical FOV).
+        //
+        // Derivation (with S at distance R, camera at S + d·S_hat·cosφ
+        // + d·Y·sinφ, looking at S):
+        //   y_ndc = R·sin(φ) / ((R·cos(φ) + d) · tan(22.5°))
+        // Solving y_ndc = 0.5 yields
+        //   φ = asin(0.2028 · d / R) + atan(0.2071)
+        //     ≈ asin(0.2028 · d / R) + 0.2043 rad
         const R = Math.sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
-        const CAM_DIST = 4;
+        // Scale camera distance with altitude but clamp so the
+        // spacecraft never falls off-frame nor gets embedded in Earth.
+        const d = Math.min(Math.max(R * 0.1, 0.3), 3);
         const invR = R > 0 ? 1 / R : 0;
+        const asinArg = Math.min(0.2028 * d * invR, 0.95);
+        const phi = Math.asin(asinArg) + 0.2043;
+        const cosPhi = Math.cos(phi);
+        const sinPhi = Math.sin(phi);
         const radialX = pos[0] * invR;
         const radialY = pos[1] * invR;
         const radialZ = pos[2] * invR;
         targetPos.current.set(
-          pos[0] + radialX * CAM_DIST,
-          pos[1] + radialY * CAM_DIST,
-          pos[2] + radialZ * CAM_DIST
+          pos[0] + d * cosPhi * radialX,
+          pos[1] + d * cosPhi * radialY + d * sinPhi,
+          pos[2] + d * cosPhi * radialZ
         );
-        const tiltY = 0.2071 * (0.75 * R + CAM_DIST);
-        targetLookAt.current.set(
-          pos[0] * 0.25,
-          pos[1] * 0.25 - tiltY,
-          pos[2] * 0.25
-        );
+        // Orbit pivot stays on the spacecraft so the user can swipe freely
+        targetLookAt.current.set(pos[0], pos[1], pos[2]);
       } else {
         // Default spacecraft follow — behind velocity vector
         targetPos.current.set(
