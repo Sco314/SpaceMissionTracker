@@ -23,6 +23,11 @@ const flybyMoonEci = getMoonPosition(flybyEvent.time.getTime());
 const flybyMoonScene = eciToScene(flybyMoonEci);
 const missionCenter = [flybyMoonScene[0] * 0.5, flybyMoonScene[1] * 0.5, flybyMoonScene[2] * 0.5];
 
+// Earth-return camera activation window: after lunar flyby, before splashdown
+const FLYBY_MS = flybyEvent.time.getTime();
+const splashdownEvent = MISSION_EVENTS.find(e => e.type === 'splashdown');
+const SPLASHDOWN_MS = splashdownEvent.time.getTime();
+
 // North Pole camera: above Earth looking down, Earth and spacecraft both in view
 // Height of 8 units (~80,000 km) gives clear view of Earth sphere + departure trajectory
 const NORTH_POLE_POS = new THREE.Vector3(0, 8, 0.01);
@@ -175,6 +180,14 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
         ));
       }
 
+      // Earth-return mode: active between lunar flyby and splashdown,
+      // but only once the moon is no longer used as a backdrop.
+      const nowMs = telemetry.epoch?.getTime() ?? 0;
+      const inEarthReturn =
+        moonBlend <= 0.001 &&
+        nowMs > FLYBY_MS &&
+        nowMs < SPLASHDOWN_MS;
+
       if (moonBlend > 0.001 && moonPos) {
         const scV = new THREE.Vector3(...pos);
         const moonV = new THREE.Vector3(...moonPos);
@@ -202,6 +215,30 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
           defCamY + (moonCamY - defCamY) * b,
           defCamZ + (moonCamZ - defCamZ) * b
         );
+        // Look at spacecraft
+        targetLookAt.current.set(pos[0], pos[1], pos[2]);
+      } else if (inEarthReturn) {
+        // Earth-background view: camera behind spacecraft along the
+        // outward radial so Earth sits in the background. Target is
+        // offset downward so Earth projects at ~25% from the top of
+        // the 45° FOV viewport (tan(θ)/tan(22.5°) = 0.5).
+        const R = Math.sqrt(pos[0] * pos[0] + pos[1] * pos[1] + pos[2] * pos[2]);
+        const CAM_DIST = 4;
+        const invR = R > 0 ? 1 / R : 0;
+        const radialX = pos[0] * invR;
+        const radialY = pos[1] * invR;
+        const radialZ = pos[2] * invR;
+        targetPos.current.set(
+          pos[0] + radialX * CAM_DIST,
+          pos[1] + radialY * CAM_DIST,
+          pos[2] + radialZ * CAM_DIST
+        );
+        const tiltY = 0.2071 * (0.75 * R + CAM_DIST);
+        targetLookAt.current.set(
+          pos[0] * 0.25,
+          pos[1] * 0.25 - tiltY,
+          pos[2] * 0.25
+        );
       } else {
         // Default spacecraft follow — behind velocity vector
         targetPos.current.set(
@@ -209,10 +246,10 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
           pos[1] - vDir.y * 2.5 + 1.5,
           pos[2] - vDir.z * 2.5
         );
+        // Look at spacecraft
+        targetLookAt.current.set(pos[0], pos[1], pos[2]);
       }
 
-      // Always look at spacecraft (keep it centered)
-      targetLookAt.current.set(pos[0], pos[1], pos[2]);
       camera.position.lerp(targetPos.current, 0.03);
       controlsRef.current.target.lerp(targetLookAt.current, 0.03);
 
