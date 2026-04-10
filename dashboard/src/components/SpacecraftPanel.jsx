@@ -36,7 +36,7 @@ function SpacecraftCard({ item }) {
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
-          <p className="text-[10px] uppercase tracking-wider text-label font-medium">{item.label}</p>
+          <p className="text-[11px] uppercase tracking-wider text-label font-medium">{item.label}</p>
           <ChevronDown
             size={12}
             className={`ml-auto text-label transition-transform flex-shrink-0 ${expanded ? 'rotate-180' : ''}`}
@@ -67,8 +67,8 @@ export default function SpacecraftPanel() {
   return (
     <div className="bg-space-800 rounded-2xl border border-border p-4 md:p-5">
       <div className="flex items-center gap-2 mb-3">
-        <Rocket size={14} className="text-label" strokeWidth={1.5} />
-        <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Spacecraft</h3>
+        <Rocket size={16} className="text-label" strokeWidth={1.5} />
+        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Spacecraft</h3>
       </div>
       <div className="space-y-0.5">
         {SPACECRAFT.map((item) => (

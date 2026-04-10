@@ -39,7 +39,7 @@ export default function SettingsPopover() {
       {open && (
         <div className="absolute right-0 top-full mt-1.5 bg-space-800 border border-border rounded-lg shadow-xl p-3 z-50 min-w-[220px]">
           <div className="flex items-center justify-between mb-2.5">
-            <span className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Settings</span>
+            <span className="text-[11px] font-medium text-slate-400 uppercase tracking-wider">Settings</span>
             <button
               onClick={() => setOpen(false)}
               aria-label="Close settings"

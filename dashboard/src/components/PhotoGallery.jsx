@@ -105,11 +105,11 @@ export default function PhotoGallery() {
     <div className="bg-space-800 rounded-xl border border-border overflow-hidden">
       <div className="px-3 py-2 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Camera size={14} className="text-cyan-400" strokeWidth={1.5} />
-          <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Mission Gallery</h3>
+          <Camera size={16} className="text-cyan-400" strokeWidth={1.5} />
+          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Mission Gallery</h3>
         </div>
         {images && images.length > 0 && (
-          <span className="text-[9px] text-slate-500">{images.length} photos · NASA Image Library</span>
+          <span className="text-[11px] text-slate-500">{images.length} photos · NASA Image Library</span>
         )}
       </div>
 
@@ -118,14 +118,14 @@ export default function PhotoGallery() {
         {isLoading && (
           <div className="flex items-center justify-center py-12 text-slate-500">
             <Loader2 size={16} className="animate-spin mr-2" />
-            <span className="text-[11px]">Loading photos from NASA Image Library...</span>
+            <span className="text-xs">Loading photos from NASA Image Library...</span>
           </div>
         )}
 
         {!isLoading && displayPhotos.length === 0 && (
-          <div className="py-8 text-center text-[11px] text-slate-500">
+          <div className="py-8 text-center text-xs text-slate-500">
             No photos available right now.
-            {error && <div className="mt-1 text-[9px] text-slate-600">({error})</div>}
+            {error && <div className="mt-1 text-[11px] text-slate-600">({error})</div>}
           </div>
         )}
 
@@ -151,13 +151,13 @@ export default function PhotoGallery() {
                   </div>
                 )}
                 <div className="absolute inset-x-0 bottom-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent p-2 pt-6">
-                  <p className="text-[9px] text-white/95 leading-tight line-clamp-2">{photo.title}</p>
+                  <p className="text-[11px] text-white/95 leading-tight line-clamp-2">{photo.title}</p>
                   {photo.credit && (
-                    <p className="text-[8px] text-slate-400 mt-0.5 truncate">{photo.credit}</p>
+                    <p className="text-[10px] text-slate-400 mt-0.5 truncate">{photo.credit}</p>
                   )}
                 </div>
                 {photo.date && (
-                  <span className="absolute top-1.5 left-1.5 text-[8px] bg-black/60 text-cyan-300 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
+                  <span className="absolute top-1.5 left-1.5 text-[10px] bg-black/60 text-cyan-300 px-1.5 py-0.5 rounded-full backdrop-blur-sm">
                     {formatDate(photo.date)}
                   </span>
                 )}
@@ -169,7 +169,7 @@ export default function PhotoGallery() {
 
       {/* NASA gallery links — these are aggregator pages, fine to keep external */}
       <div className="px-3 pb-3 space-y-2">
-        <p className="text-[9px] text-slate-500 uppercase tracking-wider">Browse on NASA.gov</p>
+        <p className="text-[11px] text-slate-500 uppercase tracking-wider">Browse on NASA.gov</p>
         <div className="flex flex-wrap gap-1.5">
           {NASA_GALLERIES.map((g, i) => (
             <a
@@ -177,7 +177,7 @@ export default function PhotoGallery() {
               href={g.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/10 text-cyan-400 text-[10px] font-medium hover:bg-cyan-500/20 transition-colors"
+              className="flex items-center gap-1 px-2 py-1 rounded bg-cyan-500/10 text-cyan-400 text-xs font-medium hover:bg-cyan-500/20 transition-colors"
             >
               {g.title}
               <ExternalLink size={9} />
@@ -250,7 +250,7 @@ export default function PhotoGallery() {
               {current.description && (
                 <p className="text-[11px] sm:text-xs text-slate-300 mt-1.5 leading-snug line-clamp-3">{current.description}</p>
               )}
-              <div className="flex items-center justify-center gap-3 mt-2 text-[10px] text-slate-500">
+              <div className="flex items-center justify-center gap-3 mt-2 text-[11px] text-slate-500">
                 {current.credit && <span>{current.credit}</span>}
                 {current.date && <span>·</span>}
                 {current.date && <span>{formatDate(current.date)}</span>}

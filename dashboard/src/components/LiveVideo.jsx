@@ -46,15 +46,15 @@ export default function LiveVideo() {
     <div className="bg-space-800 rounded-xl border border-border overflow-hidden">
       <div className="px-3 py-2 flex items-center justify-between border-b border-border">
         <div className="flex items-center gap-2">
-          <Video size={14} className="text-live" strokeWidth={1.5} />
-          <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Live Coverage</h3>
+          <Video size={16} className="text-live" strokeWidth={1.5} />
+          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Live Coverage</h3>
         </div>
         <div className="flex gap-1">
           {STREAMS.map((stream) => (
             <button
               key={stream.id}
               onClick={() => { setActiveStream(stream); setLoaded(false); }}
-              className={`text-[10px] px-2 py-1 rounded font-medium transition-colors ${
+              className={`text-xs px-2 py-1 rounded font-medium transition-colors ${
                 activeStream.id === stream.id
                   ? 'bg-space-600 text-white'
                   : 'text-label hover:text-slate-300'
@@ -100,7 +100,7 @@ export default function LiveVideo() {
 
       {rssVideos.length > 0 && (
         <div className="px-3 py-2 border-t border-border">
-          <p className="text-[9px] text-label mb-1.5">More Artemis Videos</p>
+          <p className="text-[11px] text-label mb-1.5">More Artemis Videos</p>
           <div className="flex gap-2 overflow-x-auto pb-1 [&::-webkit-scrollbar]:hidden [-ms-overflow-style:none] [scrollbar-width:none]">
             {rssVideos.map(v => (
               <button
@@ -113,7 +113,7 @@ export default function LiveVideo() {
                   className="w-full rounded"
                   alt={v.title}
                 />
-                <p className={`text-[9px] mt-1 truncate ${v.isLive ? 'text-live font-medium' : 'text-label'}`}>{v.isLive ? `● ${v.title}` : v.title}</p>
+                <p className={`text-[11px] mt-1 truncate ${v.isLive ? 'text-live font-medium' : 'text-label'}`}>{v.isLive ? `● ${v.title}` : v.title}</p>
               </button>
             ))}
           </div>

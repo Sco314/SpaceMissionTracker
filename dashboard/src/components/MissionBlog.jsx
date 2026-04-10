@@ -41,12 +41,12 @@ export default function MissionBlog() {
       {/* Header */}
       <div className="px-3 py-2 border-b border-border flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <Newspaper size={14} className="text-cyan-400" strokeWidth={1.5} />
-          <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">NASA Mission Blog</h3>
+          <Newspaper size={16} className="text-cyan-400" strokeWidth={1.5} />
+          <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">NASA Mission Blog</h3>
         </div>
         <button
           onClick={() => setExpanded(s => !s)}
-          className="text-[9px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
+          className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
           aria-expanded={expanded}
         >
           {expanded ? 'Less' : `All (${ordered.length})`}
@@ -65,8 +65,8 @@ export default function MissionBlog() {
                 rel="noopener noreferrer"
                 className="flex items-center gap-2 px-2 py-1.5 rounded hover:bg-white/[0.04] transition-colors group"
               >
-                <span className="text-[9px] text-slate-600 font-mono shrink-0 w-10">Day {link.day}</span>
-                <span className="text-[10px] text-slate-400 group-hover:text-white transition-colors flex-1 truncate">
+                <span className="text-[11px] text-slate-600 font-mono shrink-0 w-10">Day {link.day}</span>
+                <span className="text-xs text-slate-400 group-hover:text-white transition-colors flex-1 truncate">
                   {link.title}
                 </span>
                 <ExternalLink size={9} className="text-slate-600 group-hover:text-slate-400 shrink-0 transition-colors" />
@@ -75,7 +75,7 @@ export default function MissionBlog() {
           ))}
         </ul>
         {!expanded && ordered.length > 1 && (
-          <p className="text-[9px] text-slate-600 mt-1.5 px-2">
+          <p className="text-[11px] text-slate-600 mt-1.5 px-2">
             Showing latest entry — click "All" to see {ordered.length - 1} more.
           </p>
         )}
