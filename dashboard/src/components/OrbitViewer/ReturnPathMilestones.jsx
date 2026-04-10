@@ -18,13 +18,6 @@ const EARTH_R_KM = 6371;
  *   desc     – optional extra descriptor
  */
 const MILESTONES = [
-  { label: 'Troposphere', miles: 12, altitude: true },
-  { label: 'Kármán Line', miles: 62, altitude: true, desc: '"edge of space"' },
-  { label: 'Thermosphere', miles: 178, altitude: true },
-  { label: 'Ionosphere', miles: 215, altitude: true },
-  { label: 'ISS', miles: 250, altitude: true },
-  { label: 'Exosphere', miles: 301, altitude: true },
-  { label: 'Hubble Space Telescope', miles: 340, altitude: true },
   { label: 'Low Earth Orbit', miles: 671, altitude: true },
   { label: 'Medium Earth Orbit', miles: 2236, altitude: true },
   { label: 'Geosynchronous Orbit', miles: 11739.5, altitude: true },
@@ -43,6 +36,8 @@ const MILESTONES = [
   // Distance from Earth center in km (for matching trajectory positions)
   distCenterKm: m.altitude ? m.miles * MI_TO_KM + EARTH_R_KM : m.miles * MI_TO_KM,
 }));
+
+const HALFWAY_LABEL = 'Halfway Earth\u2013Moon';
 
 const flybyMs = MISSION_EVENTS.find(e => e.type === 'lunar-flyby').time.getTime();
 
@@ -125,8 +120,11 @@ function MilestoneMarker({ position, milestone, viewMode, craftScenePos, distanc
       const proximity = Math.max(0.15, 1.0 / (1 + distToCraft * 0.5));
       const camScale = Math.max(0.08, Math.min(1.5, camDist * 0.015));
       scale = proximity * camScale;
+    } else if (viewMode === 'mission' && milestone.label === HALFWAY_LABEL) {
+      // Mission view: Halfway marker gets a larger base scale
+      scale = Math.max(0.25, Math.min(2.0, camDist * 0.025));
     } else {
-      // Mission / Earth / Moon / Replay — uniform camera-distance scaling
+      // Earth / Moon — uniform camera-distance scaling
       scale = Math.max(0.12, Math.min(1.2, camDist * 0.018));
     }
 
@@ -166,10 +164,15 @@ function MilestoneMarker({ position, milestone, viewMode, craftScenePos, distanc
 }
 
 export default function ReturnPathMilestones({ trajectoryPath, telemetry, viewMode, distanceUnit }) {
-  const milestones = useMemo(
+  const allMilestones = useMemo(
     () => findMilestonePositions(trajectoryPath),
     [trajectoryPath]
   );
+
+  // In mission view, only show the Halfway marker
+  const milestones = viewMode === 'mission'
+    ? allMilestones.filter(m => m.label === HALFWAY_LABEL)
+    : allMilestones;
 
   const craftScenePos = telemetry?.position ? eciToScene(telemetry.position) : null;
 
