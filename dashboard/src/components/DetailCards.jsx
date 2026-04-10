@@ -33,13 +33,13 @@ export default function DetailCards({ telemetry }) {
 
   return (
     <div className="bg-space-800 rounded-xl border border-border p-3 sm:p-4">
-      <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider mb-2">Detailed Metrics</h3>
+      <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider mb-2">Detailed Metrics</h3>
       <div className="grid grid-cols-3 gap-2 sm:gap-3">
         {cards.map((card) => (
           <div key={card.label} className="text-center">
-            <p className="text-[9px] uppercase tracking-wider text-label mb-0.5">{card.label}</p>
+            <p className="text-[11px] uppercase tracking-wider text-label mb-0.5">{card.label}</p>
             <p className="text-sm font-mono font-semibold text-slate-100">
-              {card.value} <span className="text-[10px] font-normal text-label">{card.unit}</span>
+              {card.value} <span className="text-[11px] font-normal text-label">{card.unit}</span>
             </p>
           </div>
         ))}

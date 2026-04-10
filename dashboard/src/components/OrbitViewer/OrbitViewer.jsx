@@ -41,7 +41,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
         <button
           onClick={() => setReplayPhase('3d')}
           disabled={isPlaying}
-          className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
+          className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
             isPlaying
               ? 'bg-amber-500/20 text-amber-300 animate-pulse'
               : 'bg-white/5 text-slate-400 hover:text-amber-300 hover:bg-amber-500/10'
@@ -57,7 +57,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
             <button
               key={id}
               onClick={() => { setViewMode(id); setReplayPhase('off'); }}
-              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-[10px] font-medium transition-all ${
+              className={`flex items-center gap-1 px-2 py-1 rounded-lg text-xs font-medium transition-all ${
                 viewMode === id && !isPlaying
                   ? 'bg-white/10 text-white'
                   : 'bg-white/5 text-slate-400 hover:text-white'
@@ -97,7 +97,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
 
       {/* Bottom branding */}
       <div className="absolute bottom-2 left-0 right-0 text-center">
-        <span className="text-[10px] tracking-[0.3em] text-slate-600 font-semibold">
+        <span className="text-xs tracking-[0.3em] text-slate-600 font-semibold">
           ARTEMIS II
         </span>
       </div>

@@ -92,12 +92,12 @@ function Dashboard() {
             <div className="flex items-center gap-2 min-w-0">
               <img src="/artemis-logo.jpeg" alt="Artemis" className="hidden sm:block w-11 h-11 flex-shrink-0 rounded" />
               <img src="/artemis-ii-wordmark.png" alt="Artemis II" className="h-10 sm:h-12 flex-shrink-0" />
-              <span className="text-[8px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
+              <span className="text-[10px] text-slate-500 uppercase tracking-wider hidden sm:inline">Dashboard</span>
             </div>
 
             <div className="flex items-center gap-2">
               {telemetry && (
-                <span className="text-[9px] font-mono text-slate-400 hidden md:block">
+                <span className="text-[11px] font-mono text-slate-400 hidden md:block">
                   MET {formatMET(telemetry.met)}
                 </span>
               )}
@@ -109,7 +109,7 @@ function Dashboard() {
                 title="Contact"
               >
                 <MessageSquare size={16} />
-                <span className="text-[9px] font-medium leading-none whitespace-nowrap">Contact</span>
+                <span className="text-[11px] font-medium leading-none whitespace-nowrap">Contact</span>
               </a>
               <a
                 href="https://buymeacoffee.com/ssandvik"
@@ -119,7 +119,7 @@ function Dashboard() {
                 title="Support this!"
               >
                 <Coffee size={16} />
-                <span className="text-[9px] font-medium leading-none whitespace-nowrap">Support this!</span>
+                <span className="text-[11px] font-medium leading-none whitespace-nowrap">Support this!</span>
               </a>
               <SettingsPopover />
             </div>

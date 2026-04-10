@@ -56,10 +56,10 @@ export default function MissionTimeline({ currentTime }) {
     <div className="bg-space-800 rounded-xl border border-border overflow-hidden">
       {/* Header */}
       <div className="px-3 py-2 border-b border-border flex items-center justify-between">
-        <h3 className="text-[10px] font-medium text-slate-400 uppercase tracking-wider">Timeline</h3>
+        <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Timeline</h3>
         <button
           onClick={() => setShowAll(s => !s)}
-          className="text-[9px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
+          className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
         >
           {showAll ? 'Less' : 'All'}
           <ChevronDown size={10} className={`transition-transform ${showAll ? 'rotate-180' : ''}`} />
@@ -137,17 +137,17 @@ export default function MissionTimeline({ currentTime }) {
                     </span>
 
                     {isActive && (
-                      <span className="text-[8px] uppercase tracking-wider bg-active/15 text-active px-1 py-px rounded font-semibold leading-none">
+                      <span className="text-[10px] uppercase tracking-wider bg-active/15 text-active px-1 py-px rounded font-semibold leading-none">
                         Active
                       </span>
                     )}
                     {isPast && !isActive && (
-                      <span className="text-[8px] uppercase tracking-wider text-green-500/70 font-medium leading-none">
+                      <span className="text-[10px] uppercase tracking-wider text-green-500/70 font-medium leading-none">
                         Done
                       </span>
                     )}
 
-                    <span className={`ml-auto text-[9px] font-mono leading-none flex-shrink-0 ${
+                    <span className={`ml-auto text-[11px] font-mono leading-none flex-shrink-0 ${
                       isActive ? 'text-active/70' : isFuture ? 'text-slate-500' : 'text-slate-600'
                     }`}>
                       {relTime}
@@ -155,19 +155,19 @@ export default function MissionTimeline({ currentTime }) {
                   </div>
 
                   {isActive && (
-                    <p className="text-[10px] text-slate-400 mt-1 leading-snug">
+                    <p className="text-[12px] text-slate-400 mt-1 leading-snug">
                       {event.description}
                     </p>
                   )}
 
                   {isExpanded && !isActive && (
-                    <p className="text-[10px] text-slate-500 mt-0.5 leading-snug">
+                    <p className="text-[12px] text-slate-500 mt-0.5 leading-snug">
                       {event.description}
                     </p>
                   )}
 
                   {isExpanded && event.details && (
-                    <p className="text-[10px] text-slate-600 mt-1 leading-snug">
+                    <p className="text-[12px] text-slate-600 mt-1 leading-snug">
                       {event.details}
                     </p>
                   )}

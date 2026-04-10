@@ -51,8 +51,8 @@ export default function CrewPanel() {
   return (
     <div className="bg-space-800 rounded-2xl border border-border p-4 md:p-5">
       <div className="flex items-center gap-2 mb-3">
-        <Users size={14} className="text-label" strokeWidth={1.5} />
-        <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Artemis II Crew</h3>
+        <Users size={16} className="text-label" strokeWidth={1.5} />
+        <h3 className="text-sm font-medium text-slate-400 uppercase tracking-wider">Artemis II Crew</h3>
       </div>
       <div className="space-y-0.5">
         {CREW.map((member) => (

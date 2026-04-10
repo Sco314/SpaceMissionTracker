@@ -400,14 +400,14 @@ export default function TrajectoryMap({ trajectoryPath, telemetry }) {
       <div className="px-4 py-3 flex items-center justify-between border-b border-border">
         <div>
           <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Trajectory</h3>
-          <p className="text-[10px] text-label mt-0.5">Earth-centered ecliptic plane projection</p>
+          <p className="text-[11px] text-label mt-0.5">Earth-centered ecliptic plane projection</p>
         </div>
         <div className="flex gap-1">
           {VIEW_MODES.map(mode => (
             <button
               key={mode.id}
               onClick={() => setViewMode(mode.id)}
-              className={`text-[10px] px-2 py-1 rounded font-medium transition-colors ${
+              className={`text-xs px-2 py-1 rounded font-medium transition-colors ${
                 viewMode === mode.id ? 'bg-space-600 text-white' : 'text-label hover:text-slate-300'
               }`}
             >

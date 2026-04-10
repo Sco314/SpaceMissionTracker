@@ -4,7 +4,7 @@ function ToggleButton({ label, active, onClick }) {
   return (
     <button
       onClick={onClick}
-      className={`text-[10px] px-2 py-0.5 rounded font-medium transition-colors ${
+      className={`text-[11px] px-2 py-0.5 rounded font-medium transition-colors ${
         active ? 'bg-space-600 text-white' : 'text-label hover:text-slate-300'
       }`}
     >
