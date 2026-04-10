@@ -19,6 +19,7 @@ export const EVENT_ICONS = {
   'earthrise': Sunrise,
   'solar-eclipse': Eclipse,
   'return-coast': Globe,
+  'live-coverage': Radio,
   'entry-interface': Zap,
   'splashdown': Waves,
 };

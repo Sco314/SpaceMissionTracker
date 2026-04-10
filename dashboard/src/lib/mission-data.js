@@ -126,18 +126,25 @@ export const MISSION_EVENTS = [
     details: 'After the lunar flyby and observation period, Orion\'s free-return trajectory naturally brings it back toward Earth. The crew conducts systems evaluations and prepares for atmospheric entry.',
   },
   {
+    type: 'live-coverage',
+    time: new Date('2026-04-10T22:30:00Z'),
+    label: 'Live Reentry Coverage Begins',
+    description: 'NASA live coverage of Orion\'s reentry and splashdown begins.',
+    details: 'Live broadcast coverage starts at 5:30 p.m. CDT (6:30 p.m. EDT / 4:30 p.m. PDT) ahead of atmospheric entry and splashdown in the Pacific Ocean off the coast of San Diego.',
+  },
+  {
     type: 'entry-interface',
     time: new Date('2026-04-10T23:53:00Z'),
     label: 'Entry Interface',
     description: 'Orion reaches atmospheric entry interface at approximately 400,000 feet altitude.',
-    details: 'The crew module enters Earth\'s atmosphere at roughly 25,000 mph, experiencing temperatures of approximately 5,000°F on the heat shield. The skip-entry technique bounces Orion off the upper atmosphere to reduce g-forces.',
+    details: 'The crew module enters Earth\'s atmosphere at roughly 25,000 mph, experiencing temperatures of approximately 5,000°F on the heat shield. The skip-entry technique bounces Orion off the upper atmosphere to reduce g-forces on the crew.',
   },
   {
     type: 'splashdown',
-    time: new Date('2026-04-11T00:30:00Z'),
+    time: new Date('2026-04-11T00:07:00Z'),
     label: 'Splashdown',
-    description: 'Orion splashes down in the Pacific Ocean. Recovery teams retrieve the crew.',
-    details: 'Three main parachutes deploy to slow the crew module to approximately 20 mph for splashdown. The USS Portland and Navy divers are positioned for rapid crew recovery.',
+    description: 'Orion splashes down in the Pacific Ocean off the coast of San Diego. Recovery teams retrieve the crew.',
+    details: 'Three main parachutes deploy to slow the crew module to approximately 20 mph for splashdown at ~7:07 p.m. CDT (8:07 p.m. EDT / 5:07 p.m. PDT). The USS Portland and Navy divers are positioned for rapid crew recovery.',
   },
 ];
 
