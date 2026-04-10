@@ -3,40 +3,55 @@ import { useUnits } from '../../lib/units-context.jsx';
 import { LAUNCH_TIME, MISSION_EVENTS } from '../../lib/mission-data.js';
 
 function Gauge({ value, label, unit, progress }) {
-  const radius = 34;
-  const circumference = 2 * Math.PI * radius;
-  const filled = circumference * Math.min(1, Math.max(0, progress || 0));
-
+  // Two size tiers: mobile (72px) and desktop (88px)
+  // We render two SVGs and toggle visibility with Tailwind breakpoints
   return (
     <div className="flex flex-col items-center">
-      <div className="relative w-[88px] h-[88px] flex items-center justify-center">
-        <svg className="absolute inset-0" viewBox="0 0 88 88">
-          {/* Background ring */}
-          <circle
-            cx="44" cy="44" r={radius}
-            fill="none"
-            stroke="rgba(255,255,255,0.1)"
-            strokeWidth="3"
-          />
-          {/* Progress arc */}
-          <circle
-            cx="44" cy="44" r={radius}
-            fill="none"
-            stroke="#67e8f9"
-            strokeWidth="3"
-            strokeDasharray={`${filled} ${circumference - filled}`}
-            strokeDashoffset={circumference * 0.25}
-            strokeLinecap="round"
-            className="transition-all duration-1000"
-          />
-        </svg>
+      {/* Mobile: 72px */}
+      <div className="relative w-[72px] h-[72px] flex items-center justify-center sm:hidden">
+        <GaugeSvg size={72} radius={28} stroke={2.5} progress={progress} />
+        <div className="text-center z-10">
+          <div className="text-[14px] font-bold text-white leading-tight">{value}</div>
+          {unit && <div className="text-[10px] text-slate-400 uppercase">{unit}</div>}
+        </div>
+      </div>
+      {/* Desktop: 88px */}
+      <div className="relative w-[88px] h-[88px] hidden sm:flex items-center justify-center">
+        <GaugeSvg size={88} radius={34} stroke={3} progress={progress} />
         <div className="text-center z-10">
           <div className="text-[16px] font-bold text-white leading-tight">{value}</div>
           {unit && <div className="text-[11px] text-slate-400 uppercase">{unit}</div>}
         </div>
       </div>
-      <span className="text-[11px] text-slate-500 uppercase tracking-wider mt-0.5">{label}</span>
+      <span className="text-[10px] sm:text-[11px] text-slate-500 uppercase tracking-wider mt-0.5">{label}</span>
     </div>
+  );
+}
+
+function GaugeSvg({ size, radius, stroke, progress }) {
+  const circumference = 2 * Math.PI * radius;
+  const filled = circumference * Math.min(1, Math.max(0, progress || 0));
+  const center = size / 2;
+
+  return (
+    <svg className="absolute inset-0" viewBox={`0 0 ${size} ${size}`}>
+      <circle
+        cx={center} cy={center} r={radius}
+        fill="none"
+        stroke="rgba(255,255,255,0.1)"
+        strokeWidth={stroke}
+      />
+      <circle
+        cx={center} cy={center} r={radius}
+        fill="none"
+        stroke="#67e8f9"
+        strokeWidth={stroke}
+        strokeDasharray={`${filled} ${circumference - filled}`}
+        strokeDashoffset={circumference * 0.25}
+        strokeLinecap="round"
+        className="transition-all duration-1000"
+      />
+    </svg>
   );
 }
 
@@ -57,7 +72,7 @@ function MissionProgress({ telemetry }) {
   const moonMarker = (flybyMs - launchMs) / totalDuration;
 
   return (
-    <div className="w-[88px] flex flex-col items-center gap-0.5">
+    <div className="w-[72px] sm:w-[88px] flex flex-col items-center gap-0.5">
       <div className="w-full h-1.5 bg-white/10 rounded-full relative overflow-visible">
         {/* Progress fill */}
         <div
@@ -71,7 +86,7 @@ function MissionProgress({ telemetry }) {
           title="Lunar flyby"
         />
       </div>
-      <span className="text-[11px] text-slate-500 uppercase tracking-wider">Progress</span>
+      <span className="text-[10px] sm:text-[11px] text-slate-500 uppercase tracking-wider">Progress</span>
     </div>
   );
 }
@@ -125,14 +140,14 @@ export default function TelemetryGauges({ telemetry }) {
   }
 
   return (
-    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-3 z-10">
+    <div className="absolute right-2 top-1/2 -translate-y-1/2 flex flex-col gap-1.5 sm:gap-3 z-10">
       <Gauge value={metCompact} label="MET" unit="D:H:M" progress={metProgress} />
       <Gauge value={spd.value} label="Speed" unit={spd.unit} progress={speedProgress} />
       <Gauge value={distEarth.value} label="Earth" unit={distEarth.unit} progress={earthProgress} />
       <Gauge value={distMoon.value} label="Moon" unit={distMoon.unit} progress={moonProgress} />
       <div className="flex flex-col items-center">
-        <span className={`text-[15px] font-bold ${atMoon ? 'text-live' : 'text-cyan-400'}`}>{moonTimeValue}</span>
-        <span className="text-[11px] text-slate-500 uppercase tracking-wider">{moonTimeLabel}</span>
+        <span className={`text-[13px] sm:text-[15px] font-bold ${atMoon ? 'text-live' : 'text-cyan-400'}`}>{moonTimeValue}</span>
+        <span className="text-[10px] sm:text-[11px] text-slate-500 uppercase tracking-wider">{moonTimeLabel}</span>
       </div>
       <MissionProgress telemetry={telemetry} />
     </div>
