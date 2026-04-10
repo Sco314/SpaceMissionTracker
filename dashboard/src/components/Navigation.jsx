@@ -1,12 +1,13 @@
-import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, Globe, Orbit, Camera } from 'lucide-react';
+import { LayoutDashboard, Navigation as NavIcon, Clock, Users, Video, Database, Orbit, Camera, Rocket } from 'lucide-react';
 
 const TABS = [
-  { id: 'overview', label: 'Overview', icon: LayoutDashboard },
+  { id: 'overview', label: 'Top', icon: LayoutDashboard },
   { id: '3d-map', label: '3D Mission Trajectory Map', icon: Orbit },
-  { id: 'live', label: 'Live', icon: Video },
+  { id: 'live', label: 'Video', icon: Video },
   { id: 'timeline', label: 'Timeline', icon: Clock },
-  { id: 'crew', label: 'Crew', icon: Users },
-  { id: 'data', label: 'Data', icon: Database },
+  { id: 'crew', label: 'Artemis II Crew', icon: Users },
+  { id: 'data', label: 'Detailed Metrics', icon: Database },
+  { id: 'spacecraft', label: 'Spacecraft', icon: Rocket },
   { id: 'trajectory', label: '2D Trajectory Map', icon: NavIcon },
   { id: 'gallery', label: 'Gallery', icon: Camera },
 ];
