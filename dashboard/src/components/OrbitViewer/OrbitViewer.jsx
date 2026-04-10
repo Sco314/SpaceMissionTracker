@@ -3,6 +3,7 @@ import { Canvas } from '@react-three/fiber';
 import { Orbit, Rocket, Moon, Globe, Play } from 'lucide-react';
 import OrbitScene from './OrbitScene.jsx';
 import TelemetryGauges from './TelemetryGauges.jsx';
+import { useUnits } from '../../lib/units-context.jsx';
 
 const VIEW_MODES = [
   { id: 'spacecraft', label: 'Spacecraft', Icon: Rocket },
@@ -12,6 +13,7 @@ const VIEW_MODES = [
 ];
 
 export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compact, requestedViewMode, onViewModeApplied }) {
+  const { units } = useUnits();
   const [viewMode, setViewMode] = useState('spacecraft');
   const [replayPhase, setReplayPhase] = useState('intro-3d'); // starts with 3D intro on page load
   // Allow parent to request a view mode change (e.g. from nav)
@@ -92,6 +94,7 @@ export default function OrbitViewer({ trajectoryPath, telemetry, vectors, compac
           replaying={is3dReplay}
           setReplaying={(val) => { if (!val) setReplayPhase('off'); }}
           vectors={vectors}
+          distanceUnit={units.distance}
         />
       </Canvas>
 

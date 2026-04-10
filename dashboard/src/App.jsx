@@ -40,6 +40,7 @@ function Dashboard() {
     timeline: useRef(null),
     crew: useRef(null),
     data: useRef(null),
+    spacecraft: useRef(null),
     trajectory: useRef(null),
     gallery: useRef(null),
   };
@@ -159,8 +160,8 @@ function Dashboard() {
 
         {/* Row 2: Timeline & Data left, Crew & Spacecraft right */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
-          <div className="space-y-3 sm:space-y-5">
-            <section ref={sectionRefs.timeline} data-section="timeline">
+          <div className="flex flex-col gap-3 sm:gap-5">
+            <section ref={sectionRefs.timeline} data-section="timeline" className="md:flex-1 flex flex-col">
               <MissionTimeline currentTime={telemetry?.epoch?.getTime()} />
             </section>
 
@@ -169,12 +170,12 @@ function Dashboard() {
             </section>
           </div>
 
-          <div className="space-y-3 sm:space-y-5">
+          <div className="flex flex-col gap-3 sm:gap-5">
             <section ref={sectionRefs.crew} data-section="crew">
               <CrewPanel />
             </section>
 
-            <section>
+            <section ref={sectionRefs.spacecraft} data-section="spacecraft">
               <SpacecraftPanel />
             </section>
           </div>

@@ -5,6 +5,7 @@ import * as THREE from 'three';
 import EarthMesh from './EarthMesh.jsx';
 import MoonMesh from './MoonMesh.jsx';
 import MoonTrail from './MoonTrail.jsx';
+import ReturnPathMilestones from './ReturnPathMilestones.jsx';
 import SunMesh from './SunMesh.jsx';
 import OrionModel from './OrionModel.jsx';
 import TrajectoryLine from './TrajectoryLine.jsx';
@@ -33,7 +34,7 @@ const SPLASHDOWN_MS = splashdownEvent.time.getTime();
 const NORTH_POLE_POS = new THREE.Vector3(0, 8, 0.01);
 const NORTH_POLE_LOOKAT = new THREE.Vector3(0, 0, 0);
 
-export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, setReplaying, vectors }) {
+export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setViewMode, replaying, setReplaying, vectors, distanceUnit }) {
   const controlsRef = useRef();
   const { camera } = useThree();
   const targetPos = useRef(new THREE.Vector3(0, 60, 0));
@@ -367,6 +368,14 @@ export default function OrbitScene({ trajectoryPath, telemetry, viewMode, setVie
 
       {/* Moon orbital trail from ephemeris data */}
       <MoonTrail currentTime={activeTelemetry?.epoch} />
+
+      {/* Return-path milestone markers (altitude/distance labels) */}
+      <ReturnPathMilestones
+        trajectoryPath={trajectoryPath}
+        telemetry={activeTelemetry}
+        viewMode={replaying ? 'mission' : viewMode}
+        distanceUnit={distanceUnit}
+      />
 
       <OrbitControls
         ref={controlsRef}

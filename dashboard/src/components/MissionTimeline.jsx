@@ -53,7 +53,7 @@ export default function MissionTimeline({ currentTime }) {
   };
 
   return (
-    <div className="bg-space-800 rounded-xl border border-border overflow-hidden">
+    <div className="bg-space-800 rounded-xl border border-border overflow-hidden flex-1">
       {/* Header */}
       <div className="px-3 py-2 border-b border-border flex items-center justify-between">
         <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Timeline</h3>
