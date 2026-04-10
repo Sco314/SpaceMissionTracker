@@ -31,23 +31,24 @@ def parse_oem(filepath):
 
 if __name__ == '__main__':
     base = os.path.join(os.path.dirname(__file__), '..', '..')
-    old_path = os.path.join(base, 'ReferenceFiles', 'Artemis_II_OEM_2026_04_02_to_EI_v3.asc')
-    new_path = os.path.join(base, 'ReferenceFiles', 'Artemis_II_OEM_2026_04_06_Pre-OTC3_to_EI.asc')
     out_path = os.path.join(os.path.dirname(__file__), '..', 'src', 'data', 'trajectory_data.json')
 
-    # Parse both OEM files
-    old_vectors = parse_oem(old_path)
-    new_vectors = parse_oem(new_path)
+    # OEM files in chronological order — later files overwrite earlier for overlapping epochs
+    oem_files = [
+        os.path.join(base, 'ReferenceFiles', 'Artemis_II_OEM_2026_04_02_to_EI_v3.asc'),
+        os.path.join(base, 'ReferenceFiles', 'Artemis_II_OEM_2026_04_06_Pre-OTC3_to_EI.asc'),
+        os.path.join(base, 'ReferenceFiles', 'Artemis_II_OEM_2026_04_10_Post-ICPS-Sep-to-EI.asc'),
+    ]
 
-    # Merge: new (more accurate) data overwrites old for overlapping epochs
-    merged = {v['epoch']: v for v in old_vectors}
-    for v in new_vectors:
-        merged[v['epoch']] = v
+    merged = {}
+    for filepath in oem_files:
+        vectors = parse_oem(filepath)
+        name = os.path.basename(filepath)
+        print(f"{name}: {len(vectors)} vectors ({vectors[0]['epoch']} to {vectors[-1]['epoch']})")
+        for v in vectors:
+            merged[v['epoch']] = v
 
     vectors = sorted(merged.values(), key=lambda v: v['epoch'])
-
-    print(f"Old: {len(old_vectors)} vectors ({old_vectors[0]['epoch']} to {old_vectors[-1]['epoch']})")
-    print(f"New: {len(new_vectors)} vectors ({new_vectors[0]['epoch']} to {new_vectors[-1]['epoch']})")
     print(f"Merged: {len(vectors)} vectors ({vectors[0]['epoch']} to {vectors[-1]['epoch']})")
 
     with open(out_path, 'w') as f:
