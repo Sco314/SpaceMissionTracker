@@ -1,4 +1,4 @@
-import { useState, useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { MISSION_EVENTS } from '../lib/mission-data.js';
 import { EVENT_ICONS } from '../lib/icon-map.js';
 import { formatCountdown } from '../lib/coordinates.js';
@@ -24,12 +24,27 @@ function formatRelativeTime(eventTime, now) {
   return diff > 0 ? `in ${timeStr}` : `${timeStr} ago`;
 }
 
+function useIsDesktop() {
+  const [desktop, setDesktop] = useState(() => typeof window !== 'undefined' && window.innerWidth >= 768);
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const handler = (e) => setDesktop(e.matches);
+    mq.addEventListener('change', handler);
+    return () => mq.removeEventListener('change', handler);
+  }, []);
+  return desktop;
+}
+
 export default function MissionTimeline({ currentTime }) {
   // Round to nearest 10 seconds to avoid re-rendering on every telemetry tick
   const coarseNow = Math.floor((currentTime || Date.now()) / 10000) * 10000;
+  const isDesktop = useIsDesktop();
 
   const [expandedIdx, setExpandedIdx] = useState(null);
   const [showAll, setShowAll] = useState(false);
+
+  // On desktop, always show all events to fill the stretched tile
+  const effectiveShowAll = isDesktop || showAll;
 
   const activeIdx = useMemo(() => {
     return MISSION_EVENTS.findIndex((event, i) => {
@@ -42,7 +57,7 @@ export default function MissionTimeline({ currentTime }) {
   }, [coarseNow]);
 
   // When collapsed: show active + one before + one after
-  const eventsToShow = showAll
+  const eventsToShow = effectiveShowAll
     ? MISSION_EVENTS
     : MISSION_EVENTS.filter((_, i) => {
         return i >= activeIdx - 1 && i <= activeIdx + 1;
@@ -59,7 +74,7 @@ export default function MissionTimeline({ currentTime }) {
         <h3 className="text-xs font-medium text-slate-400 uppercase tracking-wider">Timeline</h3>
         <button
           onClick={() => setShowAll(s => !s)}
-          className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5"
+          className="text-[11px] text-slate-500 hover:text-slate-300 transition-colors font-medium flex items-center gap-0.5 md:hidden"
         >
           {showAll ? 'Less' : 'All'}
           <ChevronDown size={10} className={`transition-transform ${showAll ? 'rotate-180' : ''}`} />
@@ -71,7 +86,7 @@ export default function MissionTimeline({ currentTime }) {
         {/* Progress line */}
         <div className="absolute left-[21px] top-2 bottom-2 w-px">
           {MISSION_EVENTS.map((event, i) => {
-            if (!showAll && !eventsToShow.includes(event)) return null;
+            if (!effectiveShowAll && !eventsToShow.includes(event)) return null;
             const isPast = event.time.getTime() <= coarseNow;
             const isActive = i === activeIdx;
             return (
@@ -130,7 +145,7 @@ export default function MissionTimeline({ currentTime }) {
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-1.5">
-                    <span className={`text-xs font-medium leading-none ${
+                    <span className={`${isActive ? 'text-sm' : 'text-xs'} font-medium leading-none ${
                       isActive ? 'text-white' : isPast ? 'text-slate-400' : 'text-slate-500'
                     }`}>
                       {event.label}
@@ -155,7 +170,7 @@ export default function MissionTimeline({ currentTime }) {
                   </div>
 
                   {isActive && (
-                    <p className="text-[12px] text-slate-400 mt-1 leading-snug">
+                    <p className="text-sm text-slate-400 mt-1 leading-snug">
                       {event.description}
                     </p>
                   )}
