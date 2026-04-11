@@ -177,9 +177,9 @@ export const MISSION_EVENTS = [
   {
     type: 'splashdown',
     time: new Date('2026-04-11T00:07:00Z'),
-    label: 'Splashdown',
-    description: 'Orion splashes down in the Pacific Ocean off San Diego, completing a 694,481-mile journey.',
-    details: 'At 8:07 p.m. EDT (5:07 p.m. PDT), slowing to 20 mph, Orion splashes down in the Pacific Ocean off the coast of San Diego, completing the Artemis II crew\'s return to Earth. Within two hours, recovery teams from NASA and the U.S. military will extract the crew from Orion and fly them via helicopter to the USS John P. Murtha for post-mission medical evaluations.',
+    label: 'Splashdown — Mission Complete',
+    description: 'Orion splashed down safely in the Pacific Ocean off San Diego. The Artemis II crew is home.',
+    details: 'At 8:07 p.m. EDT (7:07 p.m. CDT / 5:07 p.m. PDT), Orion completed a parachute-assisted splashdown in the Pacific Ocean off the coast of San Diego, ending a 9-day, 1-hour, 32-minute journey of 694,481 miles. NASA and U.S. military recovery teams retrieved the crew and flew them by helicopter to the USS John P. Murtha for post-mission medical evaluations. The first crewed lunar mission since Apollo 17 ended in full success.',
   },
 ];
 
