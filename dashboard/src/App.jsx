@@ -134,6 +134,17 @@ function Dashboard() {
       {/* All sections on one scrollable page */}
       <main className="max-w-[1440px] mx-auto px-3 sm:px-4 py-3 sm:py-5 space-y-3 sm:space-y-5">
 
+        {/* Splashdown success banner */}
+        <div className="rounded-xl border border-green-500/40 bg-green-500/10 px-3 py-2 sm:px-4 sm:py-3 text-center">
+          <p className="text-green-300 text-xs sm:text-sm leading-snug">
+            <span className="font-semibold">NASA's Artemis II crew &amp; Orion spacecraft are safely back on Earth.</span>{' '}
+            They successfully completed a parachute-assisted splashdown in the Pacific Ocean off the coast of San Diego at 7:07 p.m. CDT.
+          </p>
+          <p className="text-green-400/80 text-[11px] sm:text-xs font-semibold uppercase tracking-wider mt-1">
+            Mission Duration: 9 Days, 1 Hour, 32 Minutes
+          </p>
+        </div>
+
         {/* Row 1: 3D Viewer & Live Video — side-by-side on desktop */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-5">
           <section ref={sectionRefs.overview} data-section="overview">

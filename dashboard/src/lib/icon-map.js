@@ -2,6 +2,7 @@ import {
   Rocket, ArrowUp, Flame, Moon, Globe, Zap, Waves,
   Clock, Activity, Navigation,
   Users, Compass, Award, Eye, Sunrise, Eclipse, Star, Radio,
+  Scissors, Umbrella,
 } from 'lucide-react';
 
 export const EVENT_ICONS = {
@@ -20,7 +21,9 @@ export const EVENT_ICONS = {
   'solar-eclipse': Eclipse,
   'return-coast': Globe,
   'live-coverage': Radio,
+  'separation': Scissors,
   'entry-interface': Zap,
+  'parachute': Umbrella,
   'splashdown': Waves,
 };
 

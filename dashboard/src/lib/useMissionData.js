@@ -2,9 +2,12 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { parseOEM } from './oem-parser.js';
 import { hermiteInterpolate } from './interpolator.js';
 import { distanceFromEarth, speed, kmsToMph, kmToMiles, altitude, eciToLatLon } from './coordinates.js';
-import { LAUNCH_TIME } from './mission-data.js';
+import { LAUNCH_TIME, MISSION_EVENTS } from './mission-data.js';
 import trajectoryRaw from '../data/trajectory_data.json';
 import moonEphemerisRaw from '../data/moon_ephemeris.json';
+
+const SPLASHDOWN_MS = MISSION_EVENTS.find(e => e.type === 'splashdown').time.getTime();
+const EARTH_RADIUS_KM = 6371;
 
 // Pre-process the JSON data into state vectors with epochMs
 const preloadedVectors = trajectoryRaw.map(v => ({
@@ -124,13 +127,31 @@ export function useMissionData() {
 
     function update() {
       const now = Date.now();
-      const met = now - LAUNCH_TIME.getTime();
-      const state = hermiteInterpolate(vectors, now);
+      const landed = now >= SPLASHDOWN_MS;
+      // After splashdown, freeze MET at the splashdown duration
+      const effectiveNow = landed ? SPLASHDOWN_MS : now;
+      const met = effectiveNow - LAUNCH_TIME.getTime();
+      let state = hermiteInterpolate(vectors, effectiveNow);
 
       if (state) {
-        const vel = speed(state);
-        const distEarth = distanceFromEarth(state);
-        const moonPos = getMoonPosition(now);
+        // After splashdown: clamp spacecraft to Earth's surface and zero velocity
+        if (landed) {
+          const mag = Math.sqrt(state.x ** 2 + state.y ** 2 + state.z ** 2);
+          if (mag > 0) {
+            const scale = EARTH_RADIUS_KM / mag;
+            state = {
+              ...state,
+              x: state.x * scale,
+              y: state.y * scale,
+              z: state.z * scale,
+              vx: 0, vy: 0, vz: 0,
+            };
+          }
+        }
+
+        const vel = landed ? 0 : speed(state);
+        const distEarth = landed ? 0 : distanceFromEarth(state);
+        const moonPos = getMoonPosition(effectiveNow);
         const distMoon = Math.sqrt(
           (state.x - moonPos.x) ** 2 +
           (state.y - moonPos.y) ** 2 +
@@ -146,12 +167,13 @@ export function useMissionData() {
           distEarthMiles: kmToMiles(distEarth),
           distMoonKm: distMoon,
           distMoonMiles: kmToMiles(distMoon),
-          altitudeKm: altitude(state),
+          altitudeKm: landed ? 0 : altitude(state),
           position: { x: state.x, y: state.y, z: state.z },
           velocity: { vx: state.vx, vy: state.vy, vz: state.vz },
           groundTrack: latLon,
           epoch: state.epoch,
           moonPosition: moonPos,
+          landed,
         });
       }
 
